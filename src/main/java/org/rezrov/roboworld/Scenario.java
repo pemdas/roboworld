@@ -5,24 +5,6 @@ import java.util.NoSuchElementException;
 
 import javax.swing.SwingUtilities;
 
-import edu.cascadia.roboworld.Environment.MapParseException;
-
-// FIXME - Create GUI stuff on the swing thread, not the main thread.
-//
-// Also, need to detect when the main thread has exited, both to stop timers and detect goal conditions.   May not be able
-// do to anything better than polling.  :P
-
-//
-// Slight refactor plan to enable loading and goal states:  
-//   Current "World" class becomes "Environment", includes walls, eventually includes items.
-//   Robot references its environment
-//   World class becomes a bundle of Environment + Robot, includes support for loading from text strings, comparison to goal.
-//   Goal state loading and initial state loading share the same code path.  
-//      (It would be nice to also support max number of moves?  Why oh why doesn't java have built-in support for any reasonable
-//       structured filetypes???)
-
-//
-
 // This encapsulates everything we need to run a scenario -- the starting states of the robot, environment, and also any goals that must be satisfied for 
 // the scenario to be complete.
 //
@@ -31,7 +13,7 @@ public class Scenario {
 
    private Environment env;
    private ContinuousRobot robot;
-   
+
    // A description of the scenario, presented to the student.
    private String description;
 
@@ -43,7 +25,8 @@ public class Scenario {
       this.robot = r;
    }
 
-   // The set of all ending positions for the robot which are considered "correct".  If empty, any
+   // The set of all ending positions for the robot which are considered "correct".
+   // If empty, any
    // ending position is considered correct.
    HashSet<Pose2D> goalPoses = new HashSet<>();
 
@@ -80,13 +63,13 @@ public class Scenario {
    }
 
    void createAndShowGUI(Thread appThread) {
-      new RobotWindow("Robot Land", appThread, env, robot).setVisible(true);
+      new RobotWindow("RoboWorld", appThread, env, robot).setVisible(true);
 
    }
 
    static final public int TEST1 = 0;
 
-   private static Scenario test1Scene() throws MapParseException {
+   private static Scenario test1Scene() throws Environment.MapParseException {
       Environment e = new Environment("" +
             "+-+-+-+\n" +
             "|     |\n" +

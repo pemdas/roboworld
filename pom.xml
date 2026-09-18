@@ -7,7 +7,7 @@
    <groupId>org.rezrov</groupId>
    <artifactId>roboworld</artifactId>
    <version>0.1</version>
-   <packaging>pom</packaging>
+   <packaging>jar</packaging>
 
    <name>RoboWorld</name>
    <url>https://www.github.com/pemdas/roboworld</url>
