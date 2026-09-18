@@ -3,9 +3,9 @@ package org.rezrov.roboworld;
 import java.util.Arrays;
 
 /**
- * Pose of a robot in continuous 2d space.
+ * Position of something in 2D space, including heading.
  */
-public class Pose2D {
+public class WorldPosition {
    // These need to match the robot sprites, which face up.
    static private double RIGHT = Math.PI / 2;
    static private double DOWN = Math.PI;
@@ -15,46 +15,95 @@ public class Pose2D {
    static private double TRANSLATION_SPEED = 1.0;
    static private double ROTATION_SPEED = 1.5;
 
-   public double x;
-   public double y;
-   public double heading; // Radians, normalized to [0, 2*PI)
+   private double x;
+   private double y;
+   private double heading; // Radians, normalized to [0, 2*PI)
 
-   // Default constructor.
-   public Pose2D() {
+   public double x() {
+      return x;
    }
 
-   public Pose2D(Pose2D other) {
+   public double y() {
+      return y;
+   }
+
+   public double heading() {
+      return heading;
+   }
+
+   public void setX(double x) {
+      this.x = x;
+   }
+
+   public void setY(double y) {
+      this.y = y;
+   }
+
+   public void setHeading(double heading) {
+      this.heading = normalizeHeading(heading);
+   }
+
+   // Default constructor.
+   public WorldPosition() {
+   }
+
+   public WorldPosition(double x, double y, double heading) {
+      this.x = x;
+      this.y = y;
+      this.heading = normalizeHeading(heading);
+   }
+
+   public WorldPosition(WorldPosition other) {
       x = other.x;
       y = other.y;
       heading = other.heading;
    }
 
-   public Pose2D(int x, int y, Direction direction) {
+   /*
+    * Return (other.heading - heading) normalized to (-Math.PI, Math.PI]
+    */
+   public double headingOffset(WorldPosition other) {
+      double ret = other.heading - heading;
+      if (ret > Math.PI) {
+         ret -= 2 * Math.PI;
+      } else if (ret <= -Math.PI) {
+         ret += 2 * Math.PI;
+      }
+      return ret;
+   }
+
+   public WorldPosition(int x, int y, Direction direction) {
       this.x = x;
       this.y = y;
       switch (direction) {
          case UP:
-            heading = Pose2D.UP;
+            heading = WorldPosition.UP;
             break;
          case DOWN:
-            heading = Pose2D.DOWN;
+            heading = WorldPosition.DOWN;
             break;
          case LEFT:
-            heading = Pose2D.LEFT;
+            heading = WorldPosition.LEFT;
             break;
          case RIGHT:
-            heading = Pose2D.RIGHT;
+            heading = WorldPosition.RIGHT;
             break;
       }
    }
 
    @Override
    public boolean equals(Object other) {
-      if (!(other instanceof Pose2D)) {
+      if (!(other instanceof WorldPosition)) {
          throw new Error("What are you comparing?");
       }
-      Pose2D op = (Pose2D) other;
+      WorldPosition op = (WorldPosition) other;
       return x == op.x && y == op.y && heading == op.heading;
+   }
+
+   public void copyFrom(WorldPosition other) {
+      x = other.x;
+      y = other.y;
+      heading = other.heading;
    }
 
    @Override
@@ -107,7 +156,7 @@ public class Pose2D {
     * @return the remaining time after reaching the target pose, or 0 if the
     *         target pose was not reached.
     */
-   public double moveTowards(Pose2D target, double seconds) {
+   public double moveTowards(WorldPosition target, double seconds) {
       // Robots don't do combined movements; at any given time they should only be
       // moving in one of x, y, or rotation.
       if (target.x != x) {

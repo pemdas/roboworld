@@ -16,7 +16,9 @@ public class Resources {
    }
 
    final public static BufferedImage ROBOT_SPRITE = loadImage("robot.png");
-   final public static double ROBOT_SPRITE_CELL_SIZE = 0.6;
+   // Robot should be about 60% of the length of a cell.
+   final public static double ROBOT_SPRITE_CELL_SCALE = //
+         0.6 / Math.max(ROBOT_SPRITE.getHeight(), ROBOT_SPRITE.getWidth());
 
    final public static BufferedImage PLAY_ICON = loadImage("play_button.png");
    final public static BufferedImage PAUSE_ICON = loadImage("pause_button.png");

@@ -4,9 +4,11 @@ import java.util.HashSet;
 
 public class ContinuousRobot implements Robot {
    private Environment env;
-   private Pose2D pose;
-   private Pose2D targetPose = null;
+   private WorldPosition pose;
+   private WorldPosition targetPose = null;
    private boolean isCrashed = false;
+   private PositionedWorldDrawable sprite = new WorldStaticSprite(Resources.ROBOT_SPRITE,
+         Resources.ROBOT_SPRITE_CELL_SCALE);
 
    // How much time the robot has remaining to make moves before pausing to let the
    // UI update.
@@ -16,10 +18,14 @@ public class ContinuousRobot implements Robot {
    // Note that since the coordinate system is x-right, y-down, rotation is
    // clockwise.
 
-   public ContinuousRobot(Environment env, Pose2D pose) {
+   public ContinuousRobot(Environment env, WorldPosition pose) {
       this.env = env;
-      this.pose = new Pose2D(pose);
+      this.pose = new WorldPosition(pose);
       assert env.isInBounds(pose.cellX(), pose.cellY());
+   }
+
+   synchronized public PositionedWorldDrawable getSprite() {
+      return sprite;
    }
 
    synchronized public void advance(double seconds) {
@@ -27,8 +33,8 @@ public class ContinuousRobot implements Robot {
       notify();
    }
 
-   synchronized public Pose2D getPose() {
-      return new Pose2D(pose);
+   synchronized public WorldPosition getPose() {
+      return new WorldPosition(pose);
    }
 
    // Update position until either we reach our target pose or we run out of time.
@@ -69,7 +75,7 @@ public class ContinuousRobot implements Robot {
       ++numTurnLeftCalls;
       turnLeftCallSites.add(Thread.currentThread().getStackTrace()[2]);
       if (!isCrashed) {
-         targetPose = new Pose2D(pose.cellX(), pose.cellY(), pose.direction().left());
+         targetPose = new WorldPosition(pose.cellX(), pose.cellY(), pose.direction().left());
          runToTargetPose();
       }
    }
@@ -97,7 +103,7 @@ public class ContinuousRobot implements Robot {
       ++numTurnRightCalls;
       turnRightCallSites.add(Thread.currentThread().getStackTrace()[2]);
       if (!isCrashed) {
-         targetPose = new Pose2D(pose.cellX(), pose.cellY(), pose.direction().right());
+         targetPose = new WorldPosition(pose.cellX(), pose.cellY(), pose.direction().right());
          runToTargetPose();
       }
    }
@@ -139,16 +145,16 @@ public class ContinuousRobot implements Robot {
       Direction dir = pose.direction();
       switch (dir) {
          case UP:
-            targetPose = new Pose2D(pose.cellX(), pose.cellY() - 1, dir);
+            targetPose = new WorldPosition(pose.cellX(), pose.cellY() - 1, dir);
             break;
          case LEFT:
-            targetPose = new Pose2D(pose.cellX() - 1, pose.cellY(), dir);
+            targetPose = new WorldPosition(pose.cellX() - 1, pose.cellY(), dir);
             break;
          case DOWN:
-            targetPose = new Pose2D(pose.cellX(), pose.cellY() + 1, dir);
+            targetPose = new WorldPosition(pose.cellX(), pose.cellY() + 1, dir);
             break;
          case RIGHT:
-            targetPose = new Pose2D(pose.cellX() + 1, pose.cellY(), dir);
+            targetPose = new WorldPosition(pose.cellX() + 1, pose.cellY(), dir);
             break;
       }
       runToTargetPose();

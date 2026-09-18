@@ -1,8 +1,11 @@
 # RoboWorld
+
+## What is this?
 RoboWorld is a tool intended for use in introductory programming courses taught in Java.  It provides a way to give students programming exercises that let them practice basic skill such as coditionals, loops, and method calls.
 
-## Project Goals
+It's inspired by [Karel the Robot](https://compedu.stanford.edu/karel-reader/docs/python/en/chapter1.html) and related packages, particularly the Java adaptation by [Byron Weber Becker](https://uwaterloo.ca/computer-science/contacts/byron-weber-becker).
 
+## Project Goals
 1. **Minimal setup:** this package is intended for use by students that are just beginning their computer science journey, and many student won't have significant computer expertise yet.  Using the library should involve nothing more than adding the jar file to the classpath, and the boilerplate needed to initialize and start a scenario should be as minimal as possible.  This means sometimes we do complicated things with threading deep in the library to preseve the simplicity of the student experience.
 
 2. **Maximum platform compatibility:** the same setup flow should work on Linux, Windows, and MacOS.  The library should also work with older versions of Java, since many schools don't update their JRE's often.
@@ -17,11 +20,13 @@ New code should ideally include unit test coverage.
 
 If you want to reuse code from another open source project, please clearly identify the source of the code and be sure to adhere to the license of the original code.
 
-### Artificial Intelligence
+<ul>
+#### Artificial Intelligence Policy
 
 All submissions must be from a human.  It's permissible to use AI to help you code a contribution, but ultimately a human must be responsible for ensuring that the resulting code is correct and comprehensible.
 
 AI-generated assets (sprites, sounds, etc) are not accepted in this project.
+</ul>
 
 ## Versioning
 As of this writing the version is 0.1, meaning the library is still in the "initial hacking" state.  If the current state works for your purposes, please do feel free to use it!  However, the architecture may shift radically as I continue to develop it.  

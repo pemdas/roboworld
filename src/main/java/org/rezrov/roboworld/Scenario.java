@@ -28,12 +28,12 @@ public class Scenario {
    // The set of all ending positions for the robot which are considered "correct".
    // If empty, any
    // ending position is considered correct.
-   HashSet<Pose2D> goalPoses = new HashSet<>();
+   HashSet<WorldPosition> goalPoses = new HashSet<>();
 
    // Add a goal position for the robot. If the robot ends in any goal position, it
    // has met the goal. If no goal poses are added, then the robot can end in any
    // position.
-   void addGoalPose(Pose2D pose) {
+   void addGoalPose(WorldPosition pose) {
       goalPoses.add(pose);
    }
 
@@ -80,7 +80,7 @@ public class Scenario {
             "+ +-+ +\n" +
             "|     |\n" +
             "+-+-+-+\n");
-      ContinuousRobot r = new ContinuousRobot(e, new Pose2D(2, 1, Direction.RIGHT));
+      ContinuousRobot r = new ContinuousRobot(e, new WorldPosition(2, 1, Direction.RIGHT));
       return new Scenario(e, r);
    }
 

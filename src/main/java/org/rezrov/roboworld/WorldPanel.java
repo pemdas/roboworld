@@ -14,7 +14,8 @@ import java.awt.image.BufferedImage;
 import javax.swing.JPanel;
 
 /**
- * Swing widget for displaying the state of the World.
+ * Swing widget for displaying the state of the World -- the includes the map,
+ * the robot, and any other objects in the scene.
  */
 public class WorldPanel extends JPanel {
 
@@ -31,7 +32,8 @@ public class WorldPanel extends JPanel {
    // middle of the wall in the top left of the map.
    private AffineTransform cachedTransform = null;
 
-   private MapPanelSprite robotSprite = new MapPanelSprite(Resources.ROBOT_SPRITE, Resources.ROBOT_SPRITE_CELL_SIZE);
+   private PositionedWorldDrawable robotSprite = new WorldStaticSprite(Resources.ROBOT_SPRITE,
+         Resources.ROBOT_SPRITE_CELL_SCALE);
 
    final private static AffineTransform IDENTITY_TRANSFORM = new AffineTransform();
 
@@ -89,9 +91,8 @@ public class WorldPanel extends JPanel {
       }
       g.drawRenderedImage(cachedBackgroundImage, IDENTITY_TRANSFORM);
       g.transform(cachedTransform);
-      // Pose2D robotPose = robot.getPose();
       robotSprite.setPosition(robot.getPose());
-      robotSprite.draw(g, getSize());
+      robotSprite.draw(g);
       // drawSprite(g, Resources.ROBOT_SPRITE, .6, robotPose.x, robotPose.y,
       // robotPose.heading);
       g.setTransform(savedTransform);
