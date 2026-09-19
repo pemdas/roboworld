@@ -37,7 +37,7 @@ public class RobotWindow extends JFrame {
    // Slider controlling the "playing" speed.
    private JSlider speedSlider;
    // Discrete values on the speed slider. 1x is the default on the far left.
-   static private int[] SPEED_SLIDER_VALUES = { 1, 2, 5, 10, 100 };
+   static private int[] SPEED_SLIDER_VALUES = { 1, 2, 5, 10, 100, 1000 };
 
    // Play-pause button
    private JButton playButton;

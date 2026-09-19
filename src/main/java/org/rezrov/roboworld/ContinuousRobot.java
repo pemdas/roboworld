@@ -15,11 +15,15 @@ public class ContinuousRobot implements Robot {
    private static double TURN_TIME = 0.6;
    private static double MOVE_TIME = 1.0;
 
+   // The world time at which the most recent robot action completed.
+   private double lastActionFinishedWorldTime;
+
    public ContinuousRobot(Environment env, DiscreteWorldPosition position) {
       this.env = env;
       this.position = new DiscreteWorldPosition(position);
       sprite.setPosition(position.asContinuous());
       assert env.isInBounds(position.x(), position.y());
+      lastActionFinishedWorldTime = 0;
    }
 
    synchronized public PositionedWorldDrawable sprite() {
@@ -27,13 +31,12 @@ public class ContinuousRobot implements Robot {
    }
 
    // Wait until elapsed time has passed on the world time source.
-   synchronized private void waitForWorldElapsed(double elapsed) {
-      double endTime = TimeSource.worldTimeSource().now() + elapsed;
+   synchronized private void waitUntilWorldTime(double t) {
       // Only notify once. If we get an interrupted wake, but the time
       // hasn't yet passed our end time, there's still a notify that
       // should be coming our way.
-      TimeSource.worldTimeSource().runAt(endTime, () -> lockedNotify());
-      while (TimeSource.worldTimeSource().now() < endTime) {
+      TimeSource.worldTimeSource().runAt(t, () -> lockedNotify());
+      while (TimeSource.worldTimeSource().now() < t) {
          try {
             wait();
          } catch (InterruptedException e) {
@@ -120,14 +123,25 @@ public class ContinuousRobot implements Robot {
    }
 
    private void go(DiscreteWorldPosition nextPosition, double movementTime) {
-      var start = position.asContinuous();
-      var end = nextPosition.asContinuous();
-      sprite.setPositionSource(new InterpolatingWorldPositionSource(start,
-            end,
-            movementTime,
-            TimeSource.worldTimeSource(), InterpolatingWorldPositionSource.Strategy.LINEAR));
+      double worldTime = TimeSource.worldTimeSource().now();
+      double actionEndTime = lastActionFinishedWorldTime + movementTime;
+      if (worldTime >= actionEndTime) {
+         // System.out.print("-");
+         // World time is already past where this action should finish.
+         sprite.setPosition(nextPosition.asContinuous());
+      } else {
+         // System.out.println();
+         var start = position.asContinuous();
+         var end = nextPosition.asContinuous();
+         sprite.setPositionSource(new InterpolatingWorldPositionSource(start,
+               end,
+               lastActionFinishedWorldTime,
+               movementTime,
+               TimeSource.worldTimeSource(), InterpolatingWorldPositionSource.Strategy.LINEAR));
+         waitUntilWorldTime(actionEndTime);
+      }
       position = nextPosition;
-      waitForWorldElapsed(movementTime);
+      lastActionFinishedWorldTime = actionEndTime;
    }
 
    /**

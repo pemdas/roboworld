@@ -12,6 +12,8 @@ import javax.swing.SwingUtilities;
  * Wall time runs continually. World time only runs when the robot is running.
  * To give a consistent view of the world, both time sources are updated
  * once per frame.
+ * 
+ * This class is thread safe.
  */
 public class TimeSource {
    static private TimeSource wallTimeSource = new TimeSource();
@@ -27,7 +29,7 @@ public class TimeSource {
 
    // Schedule something to be run when the time according to this TimeSource is at
    // least t.
-   public void runAt(double t, Runnable runnable) {
+   synchronized public void runAt(double t, Runnable runnable) {
       if (t <= now) {
          // Already past, do it now.
          SwingUtilities.invokeLater(runnable);
@@ -54,7 +56,7 @@ public class TimeSource {
 
    private double now = 0.0;
 
-   void advance(double dt) {
+   synchronized void advance(double dt) {
       now += dt;
       var i = scheduledTasks.iterator();
       while (i.hasNext()) {
@@ -68,7 +70,7 @@ public class TimeSource {
       }
    }
 
-   public double now() {
+   synchronized public double now() {
       return now;
    }
 }

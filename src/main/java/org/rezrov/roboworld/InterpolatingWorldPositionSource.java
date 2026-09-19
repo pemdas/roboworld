@@ -20,12 +20,13 @@ public class InterpolatingWorldPositionSource implements WorldPositionSource {
    // private Strategy strategy; Ignored for now
    private TimeSource timeSource;
 
-   public InterpolatingWorldPositionSource(ContinuousWorldPosition start, ContinuousWorldPosition end, double duration,
+   public InterpolatingWorldPositionSource(ContinuousWorldPosition start, ContinuousWorldPosition end, double startTime,
+         double duration,
          TimeSource timeSource, Strategy strategy) {
       assert duration > 0;
       this.start = start;
       this.end = end;
-      this.startTime = timeSource.now(); // Should this be specifiable to something other than now?
+      this.startTime = startTime;
       this.duration = duration;
       this.timeSource = timeSource;
       // this.strategy = strategy;
