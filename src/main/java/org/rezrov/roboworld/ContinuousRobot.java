@@ -2,54 +2,58 @@ package org.rezrov.roboworld;
 
 import java.util.HashSet;
 
+import javax.swing.SwingUtilities;
+
 public class ContinuousRobot implements Robot {
    private Environment env;
-   private WorldPosition pose;
-   private WorldPosition targetPose = null;
+   private DiscreteWorldPosition position;
+   // private WorldPosition pose;
+   // private WorldPosition targetPose = null;
    private boolean isCrashed = false;
    private PositionedWorldDrawable sprite = new WorldStaticSprite(Resources.ROBOT_SPRITE,
          Resources.ROBOT_SPRITE_CELL_SCALE);
 
-   // How much time the robot has remaining to make moves before pausing to let the
-   // UI update.
-   private double timeRemaining;
+   // Animation times for movements at 1x speed.
+   private static double TURN_TIME = 0.6;
+   private static double MOVE_TIME = 1.0;
 
-   // Heading constants.
-   // Note that since the coordinate system is x-right, y-down, rotation is
-   // clockwise.
-
-   public ContinuousRobot(Environment env, WorldPosition pose) {
+   public ContinuousRobot(Environment env, DiscreteWorldPosition position) {
       this.env = env;
-      this.pose = new WorldPosition(pose);
-      assert env.isInBounds(pose.cellX(), pose.cellY());
+      this.position = new DiscreteWorldPosition(position);
+      sprite.setPosition(position.asContinuous());
+      assert env.isInBounds(position.x(), position.y());
    }
 
-   synchronized public PositionedWorldDrawable getSprite() {
+   synchronized public PositionedWorldDrawable sprite() {
       return sprite;
    }
 
-   synchronized public void advance(double seconds) {
-      timeRemaining += seconds;
+   // synchronized public WorldPosition getPose() {
+   // return new WorldPosition(pose);
+   // }
+
+   // Wait until elapsed time has passed on the world time source.
+   synchronized private void waitForWorldElapsed(double elapsed) {
+      double endTime = TimeSource.worldTimeSource().now() + elapsed;
+      // Only notify once. If we get an interrupted wake, but the time
+      // hasn't yet passed our end time, there's still a notify that
+      // should be coming our way.
+      TimeSource.worldTimeSource().runAt(endTime, () -> lockedNotify());
+      while (TimeSource.worldTimeSource().now() < endTime) {
+         try {
+            wait();
+         } catch (InterruptedException e) {
+            // Ignored
+         }
+      }
+   }
+
+   synchronized private void lockedNotify() {
       notify();
    }
 
-   synchronized public WorldPosition getPose() {
-      return new WorldPosition(pose);
-   }
-
-   // Update position until either we reach our target pose or we run out of time.
-   synchronized private void runToTargetPose() {
-      while (!pose.equals(targetPose)) {
-         while (timeRemaining == 0) {
-            try {
-               wait();
-            } catch (InterruptedException e) {
-               // Ignored
-            }
-         }
-         timeRemaining = pose.moveTowards(targetPose, timeRemaining);
-      }
-      targetPose = null;
+   synchronized public DiscreteWorldPosition position() {
+      return position;
    }
 
    private int numTurnLeftCalls = 0;
@@ -71,12 +75,10 @@ public class ContinuousRobot implements Robot {
 
    /** Turn left 90 degrees. If the robot has crashed, this doesn't do anything. */
    synchronized public void turnLeft() {
-      assert targetPose == null;
       ++numTurnLeftCalls;
       turnLeftCallSites.add(Thread.currentThread().getStackTrace()[2]);
       if (!isCrashed) {
-         targetPose = new WorldPosition(pose.cellX(), pose.cellY(), pose.direction().left());
-         runToTargetPose();
+         go(position.left(), TURN_TIME);
       }
    }
 
@@ -99,12 +101,10 @@ public class ContinuousRobot implements Robot {
 
    /** Turn right 90 degrees */
    synchronized public void turnRight() {
-      assert targetPose == null;
       ++numTurnRightCalls;
       turnRightCallSites.add(Thread.currentThread().getStackTrace()[2]);
       if (!isCrashed) {
-         targetPose = new WorldPosition(pose.cellX(), pose.cellY(), pose.direction().right());
-         runToTargetPose();
+         go(position.right(), TURN_TIME);
       }
    }
 
@@ -125,12 +125,24 @@ public class ContinuousRobot implements Robot {
       return moveForwardCallSites.size();
    }
 
+   private void go(DiscreteWorldPosition nextPosition, double movementTime) {
+      var start = position.asContinuous();
+      var end = nextPosition.asContinuous();
+      SwingUtilities
+            .invokeLater(
+                  () -> sprite.setPositionSource(new InterpolatingWorldPositionSource(start,
+                        end,
+                        movementTime,
+                        TimeSource.worldTimeSource(), InterpolatingWorldPositionSource.Strategy.LINEAR)));
+      position = nextPosition;
+      waitForWorldElapsed(movementTime);
+   }
+
    /**
     * Attempt to move forward one space. Returns true on success, false if the way
     * was blocked
     */
    synchronized public void moveForward() {
-      assert targetPose == null;
       ++numMoveForwardCalls;
       moveForwardCallSites.add(Thread.currentThread().getStackTrace()[2]);
       if (isCrashed) {
@@ -140,24 +152,7 @@ public class ContinuousRobot implements Robot {
          isCrashed = true;
          return;
       }
-      // Don't check explicitly for moving out of bounds -- the map enforces
-      // walls around the edges, so it should be impossible.
-      Direction dir = pose.direction();
-      switch (dir) {
-         case UP:
-            targetPose = new WorldPosition(pose.cellX(), pose.cellY() - 1, dir);
-            break;
-         case LEFT:
-            targetPose = new WorldPosition(pose.cellX() - 1, pose.cellY(), dir);
-            break;
-         case DOWN:
-            targetPose = new WorldPosition(pose.cellX(), pose.cellY() + 1, dir);
-            break;
-         case RIGHT:
-            targetPose = new WorldPosition(pose.cellX() + 1, pose.cellY(), dir);
-            break;
-      }
-      runToTargetPose();
+      go(position.forward(), MOVE_TIME);
    }
 
    /**
@@ -166,7 +161,7 @@ public class ContinuousRobot implements Robot {
     * @return true if the way is blocked, false otherwise.
     */
    public boolean blocked() {
-      return env.isFacingWall(pose.coord2D(), pose.direction());
+      return env.isFacingWall(position);
    }
 
    /**

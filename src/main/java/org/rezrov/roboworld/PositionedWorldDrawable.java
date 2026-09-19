@@ -13,12 +13,12 @@ public abstract class PositionedWorldDrawable implements WorldDrawable {
       this.positionSource = positionSource;
    }
 
-   public WorldPosition getPosition() {
+   public ContinuousWorldPosition getPosition() {
       return positionSource.getPosition();
    }
 
    // Convenience method to statically set the position.
-   public void setPosition(WorldPosition position) {
+   public void setPosition(ContinuousWorldPosition position) {
       this.positionSource = new StaticWorldPositionSource(position);
    }
 

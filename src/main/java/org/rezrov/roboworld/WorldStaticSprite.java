@@ -13,11 +13,11 @@ public class WorldStaticSprite extends PositionedWorldDrawable {
    double spriteScale;
 
    public WorldStaticSprite(BufferedImage image, double spriteScale) {
-      this(image, spriteScale, new WorldPosition());
+      this(image, spriteScale, new StaticWorldPositionSource(new ContinuousWorldPosition()));
    }
 
-   public WorldStaticSprite(BufferedImage image, double spriteScale, WorldPosition position) {
-      super(position);
+   public WorldStaticSprite(BufferedImage image, double spriteScale, WorldPositionSource positionSource) {
+      super(positionSource);
       this.image = image;
       this.spriteScale = spriteScale;
    }
@@ -27,8 +27,9 @@ public class WorldStaticSprite extends PositionedWorldDrawable {
       AffineTransform saved = g.getTransform();
       double cellWidth = spriteScale * image.getWidth();
       double cellHeight = spriteScale * image.getHeight();
-      g.translate(getPosition().x - cellWidth / 2.0, getPosition().y - cellHeight / 2.0);
-      g.rotate(getPosition().heading, cellWidth / 2.0, cellHeight / 2.0);
+      ContinuousWorldPosition position = getPosition();
+      g.translate(position.x() - cellWidth / 2.0, position.y() - cellHeight / 2.0);
+      g.rotate(position.heading(), cellWidth / 2.0, cellHeight / 2.0);
       g.scale(spriteScale, spriteScale);
       g.drawRenderedImage(image, new AffineTransform());
       g.setTransform(saved);

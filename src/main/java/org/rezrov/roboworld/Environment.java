@@ -129,24 +129,24 @@ public class Environment {
       }
    }
 
-   public void addWall(Coord2D pos, Direction direction) {
-      assert isInBounds(pos.x, pos.y);
-      if (isExternalBoundary(pos, direction)) {
+   public void addWall(DiscreteWorldPosition pos) {
+      assert isInBounds(pos.x(), pos.y());
+      if (isExternalBoundary(pos)) {
          // Nothing to do.
          return;
       }
-      switch (direction) {
+      switch (pos.direction()) {
          case UP:
-            bottomWalls[pos.x][pos.y - 1] = true;
+            bottomWalls[pos.x()][pos.y() - 1] = true;
             break;
          case LEFT:
-            rightWalls[pos.x - 1][pos.y] = true;
+            rightWalls[pos.x() - 1][pos.y()] = true;
             break;
          case DOWN:
-            bottomWalls[pos.x][pos.y] = true;
+            bottomWalls[pos.x()][pos.y()] = true;
             break;
          case RIGHT:
-            rightWalls[pos.x][pos.y] = true;
+            rightWalls[pos.x()][pos.y()] = true;
             break;
       }
    }
@@ -169,28 +169,28 @@ public class Environment {
       return x >= 0 && y >= 0 && x < width && y < height;
    }
 
-   private boolean isExternalBoundary(Coord2D pos, Direction direction) {
-      return (direction == Direction.UP && pos.y == 0)
-            || (direction == Direction.DOWN && pos.y == height - 1)
-            || (direction == Direction.LEFT && pos.x == 0)
-            || (direction == Direction.RIGHT && pos.x == width - 1);
+   private boolean isExternalBoundary(DiscreteWorldPosition pos) {
+      return (pos.direction() == Direction.UP && pos.y() == 0)
+            || (pos.direction() == Direction.DOWN && pos.y() == height - 1)
+            || (pos.direction() == Direction.LEFT && pos.x() == 0)
+            || (pos.direction() == Direction.RIGHT && pos.x() == width - 1);
    }
 
-   public boolean isFacingWall(Coord2D pos, Direction direction) {
-      assert isInBounds(pos);
+   public boolean isFacingWall(DiscreteWorldPosition pos) {
+      assert isInBounds(pos.x(), pos.y());
       // Take care of the implicit boundary walls first.
-      if (isExternalBoundary(pos, direction)) {
+      if (isExternalBoundary(pos)) {
          return true;
       }
-      switch (direction) {
+      switch (pos.direction()) {
          case UP:
-            return bottomWalls[pos.x][pos.y - 1];
+            return bottomWalls[pos.x()][pos.y() - 1];
          case LEFT:
-            return rightWalls[pos.x - 1][pos.y];
+            return rightWalls[pos.x() - 1][pos.y()];
          case DOWN:
-            return bottomWalls[pos.x][pos.y];
+            return bottomWalls[pos.x()][pos.y()];
          case RIGHT:
-            return rightWalls[pos.x][pos.y];
+            return rightWalls[pos.x()][pos.y()];
          default:
             throw new AssertionError("Bad direction");
       }

@@ -32,10 +32,9 @@ public class WorldPanel extends JPanel {
    // middle of the wall in the top left of the map.
    private AffineTransform cachedTransform = null;
 
-   private PositionedWorldDrawable robotSprite = new WorldStaticSprite(Resources.ROBOT_SPRITE,
-         Resources.ROBOT_SPRITE_CELL_SCALE);
-
-   final private static AffineTransform IDENTITY_TRANSFORM = new AffineTransform();
+   // private PositionedWorldDrawable robotSprite = new
+   // WorldStaticSprite(Resources.ROBOT_SPRITE,
+   // Resources.ROBOT_SPRITE_CELL_SCALE);
 
    // Color used to fill in bars at the edges when the aspect ratio isn't perfect.
    private Color letterboxColor;
@@ -89,10 +88,10 @@ public class WorldPanel extends JPanel {
          }
          g.translate(0, topLetterboxHeight);
       }
-      g.drawRenderedImage(cachedBackgroundImage, IDENTITY_TRANSFORM);
+      g.drawRenderedImage(cachedBackgroundImage, new AffineTransform());
       g.transform(cachedTransform);
-      robotSprite.setPosition(robot.getPose());
-      robotSprite.draw(g);
+      // robotSprite.setPosition(robot.getPose());
+      robot.sprite().draw(g);
       // drawSprite(g, Resources.ROBOT_SPRITE, .6, robotPose.x, robotPose.y,
       // robotPose.heading);
       g.setTransform(savedTransform);
@@ -174,7 +173,7 @@ public class WorldPanel extends JPanel {
       // Draw top walls
       for (int x = 0; x < env.getWidth(); x++) {
          for (int y = 1; y < env.getHeight(); y++) {
-            if (env.isFacingWall(new Coord2D(x, y), Direction.UP)) {
+            if (env.isFacingWall(new DiscreteWorldPosition(x, y, Direction.UP))) {
                g.draw(new Line2D.Float(x, y, x + 1, y));
             }
          }
@@ -182,7 +181,7 @@ public class WorldPanel extends JPanel {
       // Draw left walls
       for (int x = 1; x < env.getWidth(); x++) {
          for (int y = 0; y < env.getHeight(); y++) {
-            if (env.isFacingWall(new Coord2D(x, y), Direction.LEFT)) {
+            if (env.isFacingWall(new DiscreteWorldPosition(x, y, Direction.LEFT))) {
                g.draw(new Line2D.Float(x, y, x, y + 1));
             }
          }

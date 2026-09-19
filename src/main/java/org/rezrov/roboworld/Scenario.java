@@ -28,17 +28,17 @@ public class Scenario {
    // The set of all ending positions for the robot which are considered "correct".
    // If empty, any
    // ending position is considered correct.
-   HashSet<WorldPosition> goalPoses = new HashSet<>();
+   HashSet<DiscreteWorldPosition> goalPoses = new HashSet<>();
 
    // Add a goal position for the robot. If the robot ends in any goal position, it
    // has met the goal. If no goal poses are added, then the robot can end in any
    // position.
-   void addGoalPose(WorldPosition pose) {
+   void addGoalPose(DiscreteWorldPosition pose) {
       goalPoses.add(pose);
    }
 
    public boolean goalsMet() {
-      return goalPoses.isEmpty() || goalPoses.contains(robot.getPose());
+      return goalPoses.isEmpty() || goalPoses.contains(robot.position());
    }
 
    static Robot setUp(int scenarioId) {
@@ -80,7 +80,7 @@ public class Scenario {
             "+ +-+ +\n" +
             "|     |\n" +
             "+-+-+-+\n");
-      ContinuousRobot r = new ContinuousRobot(e, new WorldPosition(2, 1, Direction.RIGHT));
+      ContinuousRobot r = new ContinuousRobot(e, new DiscreteWorldPosition(2, 1, Direction.RIGHT));
       return new Scenario(e, r);
    }
 

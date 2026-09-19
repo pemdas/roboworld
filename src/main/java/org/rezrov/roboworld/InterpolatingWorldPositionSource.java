@@ -13,14 +13,14 @@ public class InterpolatingWorldPositionSource implements WorldPositionSource {
       LINEAR
    };
 
-   private WorldPosition start;
-   private WorldPosition end;
+   private ContinuousWorldPosition start;
+   private ContinuousWorldPosition end;
    private double startTime;
    private double duration;
    // private Strategy strategy; Ignored for now
    private TimeSource timeSource;
 
-   public InterpolatingWorldPositionSource(WorldPosition start, WorldPosition end, double duration,
+   public InterpolatingWorldPositionSource(ContinuousWorldPosition start, ContinuousWorldPosition end, double duration,
          TimeSource timeSource, Strategy strategy) {
       assert duration > 0;
       this.start = start;
@@ -32,12 +32,12 @@ public class InterpolatingWorldPositionSource implements WorldPositionSource {
    }
 
    @Override
-   public WorldPosition getPosition() {
-      double p = timeSource.now() - startTime / duration;
+   public ContinuousWorldPosition getPosition() {
+      double p = (timeSource.now() - startTime) / duration;
       if (p >= 1.0) {
          return end;
       }
-      return new WorldPosition(start.x() + p * (end.x() - start.x()),
+      return new ContinuousWorldPosition(start.x() + p * (end.x() - start.x()),
             start.y() + p * (end.y() - start.y()),
             start.heading() + p * start.headingOffset(end));
    }
