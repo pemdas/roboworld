@@ -2,8 +2,6 @@ package org.rezrov.roboworld;
 
 import java.util.HashSet;
 
-import javax.swing.SwingUtilities;
-
 public class ContinuousRobot implements Robot {
    private Environment env;
    private DiscreteWorldPosition position;
@@ -27,10 +25,6 @@ public class ContinuousRobot implements Robot {
    synchronized public PositionedWorldDrawable sprite() {
       return sprite;
    }
-
-   // synchronized public WorldPosition getPose() {
-   // return new WorldPosition(pose);
-   // }
 
    // Wait until elapsed time has passed on the world time source.
    synchronized private void waitForWorldElapsed(double elapsed) {
@@ -128,12 +122,10 @@ public class ContinuousRobot implements Robot {
    private void go(DiscreteWorldPosition nextPosition, double movementTime) {
       var start = position.asContinuous();
       var end = nextPosition.asContinuous();
-      SwingUtilities
-            .invokeLater(
-                  () -> sprite.setPositionSource(new InterpolatingWorldPositionSource(start,
-                        end,
-                        movementTime,
-                        TimeSource.worldTimeSource(), InterpolatingWorldPositionSource.Strategy.LINEAR)));
+      sprite.setPositionSource(new InterpolatingWorldPositionSource(start,
+            end,
+            movementTime,
+            TimeSource.worldTimeSource(), InterpolatingWorldPositionSource.Strategy.LINEAR));
       position = nextPosition;
       waitForWorldElapsed(movementTime);
    }

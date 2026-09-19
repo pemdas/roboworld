@@ -5,10 +5,9 @@ package org.rezrov.roboworld;
  * cell, facing precisely N, S, E, or W).
  */
 public class DiscreteWorldPosition {
-   // Could consider making this class immutable after construction?
-   private int x;
-   private int y;
-   private Direction direction;
+   private final int x;
+   private final int y;
+   private final Direction direction;
 
    public int x() {
       return x;
@@ -22,20 +21,10 @@ public class DiscreteWorldPosition {
       return direction;
    }
 
-   public void setX(int x) {
-      this.x = x;
-   }
-
-   public void setY(int y) {
-      this.y = y;
-   }
-
-   public void setDirection(Direction direction) {
-      this.direction = direction;
-   }
-
    public DiscreteWorldPosition(DiscreteWorldPosition other) {
-      copyFrom(other);
+      x = other.x;
+      y = other.y;
+      direction = other.direction;
    }
 
    public DiscreteWorldPosition(int x, int y, Direction direction) {
@@ -44,32 +33,22 @@ public class DiscreteWorldPosition {
       this.direction = direction;
    }
 
-   public void copyFrom(DiscreteWorldPosition other) {
-      x = other.x;
-      y = other.y;
-      direction = other.direction;
-   }
-
    /**
     * Return the resulting position if we move forward from the current position.
     */
    public DiscreteWorldPosition forward() {
-      DiscreteWorldPosition ret = new DiscreteWorldPosition(this);
       switch (direction) {
          case UP:
-            ret.y--;
-            break;
+            return new DiscreteWorldPosition(x, y - 1, direction);
          case RIGHT:
-            ret.x++;
-            break;
+            return new DiscreteWorldPosition(x + 1, y, direction);
          case DOWN:
-            ret.y++;
-            break;
+            return new DiscreteWorldPosition(x, y + 1, direction);
          case LEFT:
-            ret.x--;
-            break;
+            return new DiscreteWorldPosition(x - 1, y, direction);
+         default:
+            throw new AssertionError("Bad direction");
       }
-      return ret;
    }
 
    /**
