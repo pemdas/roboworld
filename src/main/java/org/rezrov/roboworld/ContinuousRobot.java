@@ -137,7 +137,7 @@ public class ContinuousRobot implements Robot {
                end,
                worldTime,
                movementTime,
-               TimeSource.worldTimeSource(), InterpolatingWorldPositionSource.Strategy.LINEAR));
+               TimeSource.worldTimeSource(), InterpolatingWorldPositionSource.Strategy.SINE));
          waitUntilWorldTime(actionEndTime);
       }
       sprite.setPosition(nextPosition.asContinuous());

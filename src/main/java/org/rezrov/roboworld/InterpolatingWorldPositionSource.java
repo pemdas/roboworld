@@ -10,14 +10,15 @@ public class InterpolatingWorldPositionSource implements WorldPositionSource {
    // strategies like easing in, etc. May also want to add support for looping
    // and doing out-and-back interpolation.
    public enum Strategy {
-      LINEAR
+      LINEAR,
+      SINE
    };
 
    private ContinuousWorldPosition start;
    private ContinuousWorldPosition end;
    private double startTime;
    private double duration;
-   // private Strategy strategy; Ignored for now
+   private Strategy strategy;
    private TimeSource timeSource;
 
    public InterpolatingWorldPositionSource(ContinuousWorldPosition start, ContinuousWorldPosition end, double startTime,
@@ -29,7 +30,7 @@ public class InterpolatingWorldPositionSource implements WorldPositionSource {
       this.startTime = startTime;
       this.duration = duration;
       this.timeSource = timeSource;
-      // this.strategy = strategy;
+      this.strategy = strategy;
    }
 
    @Override
@@ -37,6 +38,14 @@ public class InterpolatingWorldPositionSource implements WorldPositionSource {
       double p = (timeSource.now() - startTime) / duration;
       if (p >= 1.0) {
          return end;
+      }
+      switch (strategy) {
+         case LINEAR:
+            // p is already what we want it to be.
+            break;
+         case SINE:
+            p = ((-Math.cos(p * Math.PI) + 1) / 2);
+            break;
       }
       return new ContinuousWorldPosition(start.x() + p * (end.x() - start.x()),
             start.y() + p * (end.y() - start.y()),
