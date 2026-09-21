@@ -5,7 +5,7 @@ public class Example {
       Robot r = Scenario.setUp(Scenario.TEST1);
       r.turnLeft();
       r.moveForward();
-      for (int i = 0; i < 1000; i++) {
+      for (int i = 0; i < 100; i++) {
          r.turnRight();
          r.turnRight();
          r.moveForward();

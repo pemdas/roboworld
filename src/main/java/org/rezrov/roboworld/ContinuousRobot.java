@@ -11,19 +11,18 @@ public class ContinuousRobot implements Robot {
    private PositionedWorldDrawable sprite = new WorldStaticSprite(Resources.ROBOT_SPRITE,
          Resources.ROBOT_SPRITE_CELL_SCALE);
 
+   // If true, then the robot doesn't
+   private boolean warpSpeed = false;
+
    // Animation times for movements at 1x speed.
    private static double TURN_TIME = 0.6;
    private static double MOVE_TIME = 1.0;
-
-   // The world time at which the most recent robot action completed.
-   private double lastActionFinishedWorldTime;
 
    public ContinuousRobot(Environment env, DiscreteWorldPosition position) {
       this.env = env;
       this.position = new DiscreteWorldPosition(position);
       sprite.setPosition(position.asContinuous());
       assert env.isInBounds(position.x(), position.y());
-      lastActionFinishedWorldTime = 0;
    }
 
    synchronized public PositionedWorldDrawable sprite() {
@@ -36,13 +35,18 @@ public class ContinuousRobot implements Robot {
       // hasn't yet passed our end time, there's still a notify that
       // should be coming our way.
       TimeSource.worldTimeSource().runAt(t, () -> lockedNotify());
-      while (TimeSource.worldTimeSource().now() < t) {
+      while (warpSpeed == false && TimeSource.worldTimeSource().now() < t) {
          try {
             wait();
          } catch (InterruptedException e) {
             // Ignored
          }
       }
+   }
+
+   synchronized public void setWarpSpeed(boolean v) {
+      warpSpeed = v;
+      notify();
    }
 
    synchronized private void lockedNotify() {
@@ -123,33 +127,31 @@ public class ContinuousRobot implements Robot {
    }
 
    private void go(DiscreteWorldPosition nextPosition, double movementTime) {
-      double worldTime = TimeSource.worldTimeSource().now();
-      double actionEndTime = lastActionFinishedWorldTime + movementTime;
-      if (worldTime >= actionEndTime) {
-         // System.out.print("-");
-         // World time is already past where this action should finish.
-         sprite.setPosition(nextPosition.asContinuous());
-      } else {
+      if (!warpSpeed) {
+         double worldTime = TimeSource.worldTimeSource().now();
+         double actionEndTime = worldTime + movementTime;
          // System.out.println();
          var start = position.asContinuous();
          var end = nextPosition.asContinuous();
          sprite.setPositionSource(new InterpolatingWorldPositionSource(start,
                end,
-               lastActionFinishedWorldTime,
+               worldTime,
                movementTime,
                TimeSource.worldTimeSource(), InterpolatingWorldPositionSource.Strategy.LINEAR));
          waitUntilWorldTime(actionEndTime);
       }
+      sprite.setPosition(nextPosition.asContinuous());
       position = nextPosition;
-      lastActionFinishedWorldTime = actionEndTime;
    }
 
    /**
     * Attempt to move forward one space. Returns true on success, false if the way
     * was blocked
     */
+
    synchronized public void moveForward() {
       ++numMoveForwardCalls;
+
       moveForwardCallSites.add(Thread.currentThread().getStackTrace()[2]);
       if (isCrashed) {
          return;
@@ -178,5 +180,4 @@ public class ContinuousRobot implements Robot {
    public boolean crashed() {
       return isCrashed;
    }
-
 }

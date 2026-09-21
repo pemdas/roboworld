@@ -72,4 +72,17 @@ public class DiscreteWorldPosition {
       return new ContinuousWorldPosition(x, y, direction.asHeading());
    }
 
+   @Override
+   public String toString() {
+      return "(" + x + " " + y + " " + direction + ")";
+   }
+
+   @Override
+   public boolean equals(Object rhs) {
+      if (!(rhs instanceof DiscreteWorldPosition)) {
+         return false;
+      }
+      var o = (DiscreteWorldPosition) rhs;
+      return x == o.x && y == o.y && direction == o.direction;
+   }
 }

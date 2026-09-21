@@ -23,6 +23,8 @@ import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class RobotWindow extends JFrame {
    // (Maximum) frames per second at which animations run. Note that things will
@@ -37,7 +39,10 @@ public class RobotWindow extends JFrame {
    // Slider controlling the "playing" speed.
    private JSlider speedSlider;
    // Discrete values on the speed slider. 1x is the default on the far left.
-   static private int[] SPEED_SLIDER_VALUES = { 1, 2, 5, 10, 100, 1000 };
+   // There's also
+   // a "MAX" value added to the end of the slider.
+   static private int[] SPEED_SLIDER_VALUES = { 1, 2, 5, 10, 50 };
+   double worldSpeedMultiplier = 1.0;
 
    // Play-pause button
    private JButton playButton;
@@ -145,6 +150,11 @@ public class RobotWindow extends JFrame {
          public void actionPerformed(ActionEvent e) {
             playButton.setIcon(running ? playIcon : pauseIcon);
             running = !running;
+            if (!running) {
+               robot.setWarpSpeed(false);
+            } else if (speedSlider.getValue() == SPEED_SLIDER_VALUES.length) {
+               robot.setWarpSpeed(true);
+            }
          }
       });
 
@@ -154,11 +164,27 @@ public class RobotWindow extends JFrame {
       bottomPanel.add(Box.createRigidArea(new Dimension(40, 0)));
 
       bottomPanel.add(makeLabel("Speed", Resources.LARGE_FONT));
-      speedSlider = new JSlider(JSlider.HORIZONTAL, 0, SPEED_SLIDER_VALUES.length - 1, 0);
+      speedSlider = new JSlider(JSlider.HORIZONTAL, 0, SPEED_SLIDER_VALUES.length, 0);
+      speedSlider.addChangeListener(new ChangeListener() {
+         @Override
+         public void stateChanged(ChangeEvent e) {
+            if (speedSlider.getValue() < SPEED_SLIDER_VALUES.length) {
+               worldSpeedMultiplier = SPEED_SLIDER_VALUES[speedSlider.getValue()];
+               robot.setWarpSpeed(false);
+            } else {
+               if (running) {
+                  robot.setWarpSpeed(true);
+               }
+               // Max speed, so this is ignored.
+               worldSpeedMultiplier = 1.0;
+            }
+         }
+      });
       Hashtable<Integer, JLabel> sliderLabels = new Hashtable<>();
       for (int i = 0; i < SPEED_SLIDER_VALUES.length; i++) {
          sliderLabels.put(i, makeLabel("" + SPEED_SLIDER_VALUES[i] + "x", Resources.SMALL_FONT));
       }
+      sliderLabels.put(SPEED_SLIDER_VALUES.length, makeLabel("MAX", Resources.SMALL_FONT));
       speedSlider.setLabelTable(sliderLabels);
       speedSlider.setPaintLabels(true);
       speedSlider.setSnapToTicks(true);
@@ -191,33 +217,29 @@ public class RobotWindow extends JFrame {
       });
       prevFrameTimeNanos = System.nanoTime();
       timer.start();
-
    }
 
    public void timerFired() {
       long now = System.nanoTime();
       double dt = (now - prevFrameTimeNanos) / 1_000_000_000.0;
+      prevFrameTimeNanos = System.nanoTime();
       TimeSource.wallTimeSource().advance(dt);
       if (!appThread.isAlive()) {
-         // TODO - Check goal states.
          timer.stop();
          running = false;
          playButton.setIcon(playIcon);
          playButton.setEnabled(false);
       } else {
-         double elapsed = prevFrameTimeNanos = now;
          if (running) {
-            TimeSource.worldTimeSource().advance(SPEED_SLIDER_VALUES[speedSlider.getValue()] * dt);
-            // robot.advance( * elapsed);
-            movesStatus.setText("" + robot.numMoveForwardCalls());
-            leftTurnsStatus.setText("" + robot.numTurnLeftCalls());
-            rightTurnsStatus.setText("" + robot.numTurnRightCalls());
+            TimeSource.worldTimeSource().advance(worldSpeedMultiplier * dt);
          }
-         worldPanel.paintImmediately(0, 0, worldPanel.getWidth(), worldPanel.getHeight());
-         // X11 likes to kind of nagle algorithm events sometimes, which causes latency.
-         // Flush rendering out immediately.
-         Toolkit.getDefaultToolkit().sync();
       }
+      movesStatus.setText("" + robot.numMoveForwardCalls());
+      leftTurnsStatus.setText("" + robot.numTurnLeftCalls());
+      rightTurnsStatus.setText("" + robot.numTurnRightCalls());
+      worldPanel.paintImmediately(0, 0, worldPanel.getWidth(), worldPanel.getHeight());
+      // X11 likes to kind of nagle algorithm events sometimes, which causes latency.
+      // Flush rendering out immediately.
+      Toolkit.getDefaultToolkit().sync();
    }
-
 }

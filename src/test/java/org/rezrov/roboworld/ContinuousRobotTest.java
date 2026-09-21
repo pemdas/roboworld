@@ -1,5 +1,11 @@
 package org.rezrov.roboworld;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
+
 public class ContinuousRobotTest {
    private Environment env;
 
@@ -7,35 +13,35 @@ public class ContinuousRobotTest {
       env = new Environment(2, 2);
       env.addWall(new DiscreteWorldPosition(0, 0, Direction.RIGHT));
    }
-   /* 
+
    @Test
    public void turnLeft() {
-      ContinuousRobot r = new ContinuousRobot(env, new ContinuousWorldPosition(0, 1, Direction.RIGHT));
-      r.advance(1000);
-      assertEquals(r.getPose(), new ContinuousWorldPosition(0, 1, Direction.RIGHT));
+      ContinuousRobot r = new ContinuousRobot(env, new DiscreteWorldPosition(0, 1, Direction.RIGHT));
+      r.setWarpSpeed(true);
+      assertEquals(r.position(), new DiscreteWorldPosition(0, 1, Direction.RIGHT));
       r.turnLeft();
-      assertEquals(r.getPose(), new ContinuousWorldPosition(0, 1, Direction.UP));
+      assertEquals(r.position(), new DiscreteWorldPosition(0, 1, Direction.UP));
       r.turnLeft();
-      assertEquals(r.getPose(), new ContinuousWorldPosition(0, 1, Direction.LEFT));
+      assertEquals(r.position(), new DiscreteWorldPosition(0, 1, Direction.LEFT));
       r.turnLeft();
-      assertEquals(r.getPose(), new ContinuousWorldPosition(0, 1, Direction.DOWN));
+      assertEquals(r.position(), new DiscreteWorldPosition(0, 1, Direction.DOWN));
       r.turnLeft();
-      assertEquals(r.getPose(), new ContinuousWorldPosition(0, 1, Direction.RIGHT));
+      assertEquals(r.position(), new DiscreteWorldPosition(0, 1, Direction.RIGHT));
    }
 
    @Test
    public void turnRight() {
-      ContinuousRobot r = new ContinuousRobot(env, new ContinuousWorldPosition(1, 0, Direction.DOWN));
-      r.advance(1000);
-      assertEquals(r.getPose(), new ContinuousWorldPosition(1, 0, Direction.DOWN));
+      ContinuousRobot r = new ContinuousRobot(env, new DiscreteWorldPosition(1, 0, Direction.DOWN));
+      r.setWarpSpeed(true);
+      assertEquals(r.position(), new DiscreteWorldPosition(1, 0, Direction.DOWN));
       r.turnRight();
-      assertEquals(r.getPose(), new ContinuousWorldPosition(1, 0, Direction.LEFT));
+      assertEquals(r.position(), new DiscreteWorldPosition(1, 0, Direction.LEFT));
       r.turnRight();
-      assertEquals(r.getPose(), new ContinuousWorldPosition(1, 0, Direction.UP));
+      assertEquals(r.position(), new DiscreteWorldPosition(1, 0, Direction.UP));
       r.turnRight();
-      assertEquals(r.getPose(), new ContinuousWorldPosition(1, 0, Direction.RIGHT));
+      assertEquals(r.position(), new DiscreteWorldPosition(1, 0, Direction.RIGHT));
       r.turnRight();
-      assertEquals(r.getPose(), new ContinuousWorldPosition(1, 0, Direction.DOWN));
+      assertEquals(r.position(), new DiscreteWorldPosition(1, 0, Direction.DOWN));
    }
 
    @Test
@@ -49,46 +55,50 @@ public class ContinuousRobotTest {
       // +---+---+
       // @formatter:on
 
-      ContinuousRobot r = new ContinuousRobot(env, new ContinuousWorldPosition(0, 0, Direction.RIGHT));
-      r.advance(1000);
-      assertEquals(new ContinuousWorldPosition(0, 0, Direction.RIGHT), r.getPose());
+      ContinuousRobot r = new ContinuousRobot(env, new DiscreteWorldPosition(0, 0, Direction.RIGHT));
+      r.setWarpSpeed(true);
+      assertEquals(new DiscreteWorldPosition(0, 0, Direction.RIGHT), r.position());
       r.turnLeft();
-      assertEquals(new ContinuousWorldPosition(0, 0, Direction.UP), r.getPose());
+      assertEquals(new DiscreteWorldPosition(0, 0, Direction.UP), r.position());
       r.turnLeft();
-      assertEquals(new ContinuousWorldPosition(0, 0, Direction.LEFT), r.getPose());
+      assertEquals(new DiscreteWorldPosition(0, 0, Direction.LEFT), r.position());
       r.turnLeft();
-      assertEquals(new ContinuousWorldPosition(0, 0, Direction.DOWN), r.getPose());
+      assertEquals(new DiscreteWorldPosition(0, 0, Direction.DOWN), r.position());
       r.moveForward();
-      assertEquals(new ContinuousWorldPosition(0, 1, Direction.DOWN), r.getPose());
+      assertEquals(new DiscreteWorldPosition(0, 1, Direction.DOWN), r.position());
       r.turnRight();
-      assertEquals(new ContinuousWorldPosition(0, 1, Direction.LEFT), r.getPose());
+      assertEquals(new DiscreteWorldPosition(0, 1, Direction.LEFT), r.position());
       r.turnRight();
       r.turnRight();
       r.moveForward();
-      assertEquals(new ContinuousWorldPosition(1, 1, Direction.RIGHT), r.getPose());
+      assertEquals(new DiscreteWorldPosition(1, 1, Direction.RIGHT), r.position());
       r.turnLeft();
       r.moveForward();
-      assertEquals(new ContinuousWorldPosition(1, 0, Direction.UP), r.getPose());
+      assertEquals(new DiscreteWorldPosition(1, 0, Direction.UP), r.position());
       r.turnLeft();
-      assertEquals(new ContinuousWorldPosition(1, 0, Direction.LEFT), r.getPose());
+      assertEquals(new DiscreteWorldPosition(1, 0, Direction.LEFT), r.position());
    }
-*/
-   /*
-    * @Test
-    * public void crash() {
-    * Robot r = new Robot(env, new Coord2D(0, 0), Direction.RIGHT);
-    * assertFalse(r.crashed());
-    * r.moveForward();
-    * assertTrue(r.crashed());
-    * assertEquals(r.getPosition(), new Coord2D(0, 0));
-    * assertEquals(r.getDirection(), Direction.RIGHT);
-    * 
-    * // Turns should not work when crashed.
-    * r.turnLeft();
-    * assertEquals(r.getDirection(), Direction.RIGHT);
-    * r.turnRight();
-    * assertEquals(r.getDirection(), Direction.RIGHT);
-    * 
-    * }
-    */
+
+   @Test
+   public void crash() {
+      ContinuousRobot r = new ContinuousRobot(env, new DiscreteWorldPosition(0, 0, Direction.RIGHT));
+      r.setWarpSpeed(true);
+      assertFalse(r.crashed());
+      r.moveForward();
+      assertTrue(r.crashed());
+      assertEquals(new DiscreteWorldPosition(0, 0, Direction.RIGHT), r.position());
+
+      // Turns and moves should do nothing when we've crashed.
+      r.turnLeft();
+      assertEquals(new DiscreteWorldPosition(0, 0, Direction.RIGHT), r.position());
+      r.turnRight();
+      assertEquals(new DiscreteWorldPosition(0, 0, Direction.RIGHT), r.position());
+
+      // This is kind of silly, since we're still facing a wall, but should still be a
+      // NOP.
+      r.moveForward();
+      assertEquals(new DiscreteWorldPosition(0, 0, Direction.RIGHT), r.position());
+
+   }
+
 }
