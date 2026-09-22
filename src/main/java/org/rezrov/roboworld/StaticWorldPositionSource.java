@@ -14,4 +14,5 @@ public class StaticWorldPositionSource implements WorldPositionSource {
    public ContinuousWorldPosition getPosition() {
       return position;
    }
+
 }

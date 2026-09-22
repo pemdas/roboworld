@@ -6,18 +6,28 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-public class ContinuousRobotTest {
+public class RobotImplTest {
+   static class FakeRobotDisplayTarget
+         implements RobotDisplayTarget {
+      @Override
+      public void updateRobotStats(RobotStats stats) {
+      }
+
+      @Override
+      public void moveRobot(ContinuousWorldPosition start, ContinuousWorldPosition end, double movementTime) {
+      }
+   }
+
    private Environment env;
 
-   public ContinuousRobotTest() {
+   public RobotImplTest() {
       env = new Environment(2, 2);
       env.addWall(new DiscreteWorldPosition(0, 0, Direction.RIGHT));
    }
 
    @Test
    public void turnLeft() {
-      ContinuousRobot r = new ContinuousRobot(env, new DiscreteWorldPosition(0, 1, Direction.RIGHT));
-      r.setWarpSpeed(true);
+      RobotImpl r = new RobotImpl(env, new DiscreteWorldPosition(0, 1, Direction.RIGHT), new FakeRobotDisplayTarget());
       assertEquals(r.position(), new DiscreteWorldPosition(0, 1, Direction.RIGHT));
       r.turnLeft();
       assertEquals(r.position(), new DiscreteWorldPosition(0, 1, Direction.UP));
@@ -31,8 +41,7 @@ public class ContinuousRobotTest {
 
    @Test
    public void turnRight() {
-      ContinuousRobot r = new ContinuousRobot(env, new DiscreteWorldPosition(1, 0, Direction.DOWN));
-      r.setWarpSpeed(true);
+      RobotImpl r = new RobotImpl(env, new DiscreteWorldPosition(1, 0, Direction.DOWN), new FakeRobotDisplayTarget());
       assertEquals(r.position(), new DiscreteWorldPosition(1, 0, Direction.DOWN));
       r.turnRight();
       assertEquals(r.position(), new DiscreteWorldPosition(1, 0, Direction.LEFT));
@@ -55,8 +64,7 @@ public class ContinuousRobotTest {
       // +---+---+
       // @formatter:on
 
-      ContinuousRobot r = new ContinuousRobot(env, new DiscreteWorldPosition(0, 0, Direction.RIGHT));
-      r.setWarpSpeed(true);
+      RobotImpl r = new RobotImpl(env, new DiscreteWorldPosition(0, 0, Direction.RIGHT), new FakeRobotDisplayTarget());
       assertEquals(new DiscreteWorldPosition(0, 0, Direction.RIGHT), r.position());
       r.turnLeft();
       assertEquals(new DiscreteWorldPosition(0, 0, Direction.UP), r.position());
@@ -81,8 +89,7 @@ public class ContinuousRobotTest {
 
    @Test
    public void crash() {
-      ContinuousRobot r = new ContinuousRobot(env, new DiscreteWorldPosition(0, 0, Direction.RIGHT));
-      r.setWarpSpeed(true);
+      RobotImpl r = new RobotImpl(env, new DiscreteWorldPosition(0, 0, Direction.RIGHT), new FakeRobotDisplayTarget());
       assertFalse(r.crashed());
       r.moveForward();
       assertTrue(r.crashed());

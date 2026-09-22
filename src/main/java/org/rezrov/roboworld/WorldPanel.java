@@ -32,6 +32,9 @@ public class WorldPanel extends JPanel {
    // middle of the wall in the top left of the map.
    private AffineTransform cachedTransform = null;
 
+   // Robot sprite.
+   private PositionedWorldDrawable robotSprite;
+
    // private PositionedWorldDrawable robotSprite = new
    // WorldStaticSprite(Resources.ROBOT_SPRITE,
    // Resources.ROBOT_SPRITE_CELL_SCALE);
@@ -41,12 +44,17 @@ public class WorldPanel extends JPanel {
 
    // Environment and robot we're rendering
    private Environment env;
-   private ContinuousRobot robot;
 
-   public WorldPanel(Environment e, ContinuousRobot r, Color letterboxColor) {
-      env = e;
-      robot = r;
+   private TimeSource worldTimeSource;
+
+   public WorldPanel(Environment env, Color letterboxColor,
+         TimeSource worldTimeSource,
+         DiscreteWorldPosition startingRobotPosition) {
+      this.env = env;
       this.letterboxColor = letterboxColor;
+      this.worldTimeSource = worldTimeSource;
+      robotSprite = new WorldStaticSprite(Resources.ROBOT_SPRITE, Resources.ROBOT_SPRITE_CELL_SCALE);
+      robotSprite.setPosition(startingRobotPosition.asContinuous());
    }
 
    @Override
@@ -90,37 +98,14 @@ public class WorldPanel extends JPanel {
       }
       g.drawRenderedImage(cachedBackgroundImage, new AffineTransform());
       g.transform(cachedTransform);
-      // robotSprite.setPosition(robot.getPose());
-      robot.sprite().draw(g);
-      // drawSprite(g, Resources.ROBOT_SPRITE, .6, robotPose.x, robotPose.y,
-      // robotPose.heading);
+      synchronized (this) {
+         // Robot sprite is manipulated directly by the application thread, so must
+         // be protected by the lock for thread safety.
+         robotSprite.draw(g);
+      }
       g.setTransform(savedTransform);
-      // System.out.println("Paint took " + (System.nanoTime() - start) /
-      // 1_000_000_000.0 + " seconds");
    }
 
-   // Draw the given sprite to g. g should be set up with the world transform
-   // (origin at top left, cell size is 1 unit).
-   // spriteCellSize is the size we want to render the sprite in terms of a cell
-   // length. The longer dimension of the sprite
-   // will be scaled to this.
-   //
-   // Rotation is clockwise, and in radians.
-   /*
-    * static private void drawSprite(Graphics2D g, RenderedImage sprite, double
-    * spriteCellSize, double centerX,
-    * double centerY, double rotation) {
-    * AffineTransform saved = g.getTransform();
-    * double scale = spriteCellSize / Math.max(sprite.getHeight(),
-    * sprite.getWidth());
-    * double cellWidth = scale * sprite.getWidth();
-    * double cellHeight = scale * sprite.getHeight();
-    * g.translate(centerX - cellWidth / 2.0, centerY - cellHeight / 2.0);
-    * g.rotate(rotation, cellWidth / 2.0, cellHeight / 2.0);
-    * g.drawRenderedImage(sprite, AffineTransform.getScaleInstance(scale, scale));
-    * g.setTransform(saved);
-    * }
-    */
    // Return the pixel dimensions we'll use to render the env.
    private Dimension worldSizePx() {
       float worldRenderWidth = env.getWidth() + WALL_WIDTH;
@@ -196,5 +181,35 @@ public class WorldPanel extends JPanel {
       // in those cells.
       g.translate(.5f, .5f);
       cachedTransform = g.getTransform();
+   }
+
+   synchronized public void moveRobot(ContinuousWorldPosition from, ContinuousWorldPosition to, double movementTime) {
+      if (movementTime <= 0) {
+         // Instantaneous move.
+         robotSprite.setPositionSource(new StaticWorldPositionSource(to));
+      } else {
+         // Move where the thread should block while the animation completes.
+         double now = worldTimeSource.now();
+         double moveEndTime = now + movementTime;
+         robotSprite
+               .setPositionSource(
+                     new InterpolatingWorldPositionSource(from, to, now, moveEndTime, worldTimeSource,
+                           InterpolatingWorldPositionSource.Strategy.SINE));
+         // Put the application thread to sleep until the move is finished.
+         worldTimeSource.runAt(moveEndTime, new Runnable() {
+            @Override
+            public void run() {
+               synchronized (WorldPanel.this) {
+                  WorldPanel.this.notify();
+               }
+            }
+         });
+         while (worldTimeSource.now() < moveEndTime) {
+            try {
+               wait();
+            } catch (InterruptedException e) {
+            }
+         }
+      }
    }
 }

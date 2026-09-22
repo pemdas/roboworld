@@ -72,6 +72,10 @@ public class DiscreteWorldPosition {
       return new ContinuousWorldPosition(x, y, direction.asHeading());
    }
 
+   public Coord2D asCoord2D() {
+      return new Coord2D(x, y);
+   }
+
    @Override
    public String toString() {
       return "(" + x + " " + y + " " + direction + ")";

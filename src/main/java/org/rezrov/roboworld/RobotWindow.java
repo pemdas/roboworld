@@ -22,11 +22,12 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.Timer;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-public class RobotWindow extends JFrame {
+public class RobotWindow extends JFrame
+      implements RobotDisplayTarget {
    // (Maximum) frames per second at which animations run. Note that things will
    // still work correctly if the computer can't maintain this framerate (which,
    // given the modest demands, is a pretty rare situation). We just don't want
@@ -34,14 +35,13 @@ public class RobotWindow extends JFrame {
    // faster hardware.
    private final static int TARGET_FPS = 60;
 
-   private JPanel worldPanel;
+   private WorldPanel worldPanel;
 
    // Slider controlling the "playing" speed.
    private JSlider speedSlider;
-   // Discrete values on the speed slider. 1x is the default on the far left.
-   // There's also
-   // a "MAX" value added to the end of the slider.
-   static private int[] SPEED_SLIDER_VALUES = { 1, 2, 5, 10, 50 };
+   // Discrete values on the speed slider. 1x is the default.
+   // The last value is labeled MAX
+   static private int[] SPEED_SLIDER_VALUES = { 1, 2, 5, 10, 50, Integer.MAX_VALUE };
    double worldSpeedMultiplier = 1.0;
 
    // Play-pause button
@@ -75,11 +75,10 @@ public class RobotWindow extends JFrame {
    private JTextField leftTurnCallSites = new JTextField();
    private JTextField rightTurnCallSites = new JTextField();
 
+   RobotStats robotStats = new RobotStats();
+
    // Timer used to run the update loop.
    private javax.swing.Timer timer;
-
-   // Reference to the robot in the scene.
-   private ContinuousRobot robot;
 
    // Time of the most recent frame update.
    long prevFrameTimeNanos;
@@ -91,7 +90,13 @@ public class RobotWindow extends JFrame {
    }
 
    private JPanel createGoalPanel() {
-      return null;
+      JPanel goalPanel = new JPanel();
+      var border = BorderFactory.createTitledBorder("Goals");
+      border.setTitleFont(Resources.MEDIUM_FONT);
+      goalPanel.setBorder(border);
+      goalPanel.add(makeLabel("Foo", Resources.MEDIUM_FONT));
+      goalPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, goalPanel.getPreferredSize().height));
+      return goalPanel;
    }
 
    private JPanel createStatusPanel() {
@@ -106,11 +111,17 @@ public class RobotWindow extends JFrame {
       JTextField[] statusFields = { movesStatus, leftTurnsStatus, rightTurnsStatus };
       assert statusLabels.length == statusFields.length;
       var c = new GridBagConstraints();
+      c.insets.top = 5;
+      c.insets.bottom = 0;
       for (int i = 0; i < statusLabels.length; i++) {
          c.gridx = 0;
          c.gridy = i;
          c.insets.left = 10;
          c.insets.right = 5;
+         if (i == statusLabels.length - 1) {
+            // Last row gets padding on bottom to match top of table padding.
+            c.insets.bottom = 10;
+         }
          c.fill = GridBagConstraints.HORIZONTAL;
          var l = makeLabel(statusLabels[i], Resources.MEDIUM_FONT);
          l.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -128,6 +139,8 @@ public class RobotWindow extends JFrame {
          statusPanel.add(statusFields[i], c);
          c.insets.top = 3; // For all rows after the first.
       }
+
+      statusPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, statusPanel.getPreferredSize().height));
       return statusPanel;
    }
 
@@ -135,6 +148,7 @@ public class RobotWindow extends JFrame {
       JPanel rightPanel = new JPanel();
       rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
       rightPanel.add(createStatusPanel());
+      rightPanel.add(createGoalPanel());
       rightPanel.add(Box.createVerticalGlue());
       return rightPanel;
    }
@@ -149,11 +163,11 @@ public class RobotWindow extends JFrame {
          @Override
          public void actionPerformed(ActionEvent e) {
             playButton.setIcon(running ? playIcon : pauseIcon);
-            running = !running;
-            if (!running) {
-               robot.setWarpSpeed(false);
-            } else if (speedSlider.getValue() == SPEED_SLIDER_VALUES.length) {
-               robot.setWarpSpeed(true);
+            synchronized (RobotWindow.this) {
+               running = !running;
+               if (running) {
+                  RobotWindow.this.notifyAll();
+               }
             }
          }
       });
@@ -164,27 +178,20 @@ public class RobotWindow extends JFrame {
       bottomPanel.add(Box.createRigidArea(new Dimension(40, 0)));
 
       bottomPanel.add(makeLabel("Speed", Resources.LARGE_FONT));
-      speedSlider = new JSlider(JSlider.HORIZONTAL, 0, SPEED_SLIDER_VALUES.length, 0);
+      speedSlider = new JSlider(JSlider.HORIZONTAL, 0, SPEED_SLIDER_VALUES.length - 1, 0);
       speedSlider.addChangeListener(new ChangeListener() {
          @Override
          public void stateChanged(ChangeEvent e) {
-            if (speedSlider.getValue() < SPEED_SLIDER_VALUES.length) {
+            synchronized (RobotWindow.this) {
                worldSpeedMultiplier = SPEED_SLIDER_VALUES[speedSlider.getValue()];
-               robot.setWarpSpeed(false);
-            } else {
-               if (running) {
-                  robot.setWarpSpeed(true);
-               }
-               // Max speed, so this is ignored.
-               worldSpeedMultiplier = 1.0;
             }
          }
       });
       Hashtable<Integer, JLabel> sliderLabels = new Hashtable<>();
-      for (int i = 0; i < SPEED_SLIDER_VALUES.length; i++) {
+      for (int i = 0; i < SPEED_SLIDER_VALUES.length - 1; i++) {
          sliderLabels.put(i, makeLabel("" + SPEED_SLIDER_VALUES[i] + "x", Resources.SMALL_FONT));
       }
-      sliderLabels.put(SPEED_SLIDER_VALUES.length, makeLabel("MAX", Resources.SMALL_FONT));
+      sliderLabels.put(SPEED_SLIDER_VALUES.length - 1, makeLabel("MAX", Resources.SMALL_FONT));
       speedSlider.setLabelTable(sliderLabels);
       speedSlider.setPaintLabels(true);
       speedSlider.setSnapToTicks(true);
@@ -196,13 +203,12 @@ public class RobotWindow extends JFrame {
       return bottomPanel;
    }
 
-   public RobotWindow(String title, Thread appThread, Environment env, ContinuousRobot robot) {
+   public RobotWindow(String title, Thread appThread, Environment env, DiscreteWorldPosition robotStart) {
       super(title);
       this.appThread = appThread;
-      this.robot = robot;
       setMinimumSize(new Dimension(600, 400));
       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      worldPanel = new WorldPanel(env, robot, Color.CYAN);
+      worldPanel = new WorldPanel(env, Color.CYAN, TimeSource.worldTimeSource(), robotStart);
       getContentPane().add(worldPanel, BorderLayout.CENTER);
       getContentPane().add(createBottomPanel(), BorderLayout.PAGE_END);
       getContentPane().add(createRightPanel(), BorderLayout.LINE_END);
@@ -210,7 +216,7 @@ public class RobotWindow extends JFrame {
       // display it
       pack();
       setVisible(true);
-      timer = new Timer(Math.round(1000.0f / TARGET_FPS), new ActionListener() {
+      timer = new javax.swing.Timer(Math.round(1000.0f / TARGET_FPS), new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             timerFired();
          }
@@ -225,21 +231,51 @@ public class RobotWindow extends JFrame {
       prevFrameTimeNanos = System.nanoTime();
       TimeSource.wallTimeSource().advance(dt);
       if (!appThread.isAlive()) {
+         // App thread exited, we don't need to do any more animations, so we can stop
+         // this update timer.
          timer.stop();
          running = false;
          playButton.setIcon(playIcon);
          playButton.setEnabled(false);
-      } else {
-         if (running) {
-            TimeSource.worldTimeSource().advance(worldSpeedMultiplier * dt);
-         }
+      } else if (running) {
+         TimeSource.worldTimeSource().advance(worldSpeedMultiplier * dt);
       }
-      movesStatus.setText("" + robot.numMoveForwardCalls());
-      leftTurnsStatus.setText("" + robot.numTurnLeftCalls());
-      rightTurnsStatus.setText("" + robot.numTurnRightCalls());
       worldPanel.paintImmediately(0, 0, worldPanel.getWidth(), worldPanel.getHeight());
       // X11 likes to kind of nagle algorithm events sometimes, which causes latency.
       // Flush rendering out immediately.
       Toolkit.getDefaultToolkit().sync();
+   }
+
+   // Note this is called from the application thread, not the Swing thread.
+   @Override
+   public void moveRobot(ContinuousWorldPosition from, ContinuousWorldPosition to, double movementTime) {
+      synchronized (this) {
+         // Pause here if we're not running.
+         while (!running) {
+            try {
+               wait();
+            } catch (InterruptedException e) {
+            }
+         }
+         if (worldSpeedMultiplier == Integer.MAX_VALUE) {
+            movementTime = 0;
+         }
+      }
+      // Don't hold the lock for this object while the robot moves.
+      assert !Thread.holdsLock(this);
+      worldPanel.moveRobot(from, to, movementTime);
+   }
+
+   // Note this is called from the application thread, not the Swing thread.
+   @Override
+   public void updateRobotStats(RobotStats newStats) {
+      RobotStats copy = new RobotStats(newStats);
+      SwingUtilities.invokeLater(new Runnable() {
+         public void run() {
+            leftTurnsStatus.setText("" + copy.numTurnsLeft);
+            rightTurnsStatus.setText("" + copy.numTurnsRight);
+            movesStatus.setText("" + copy.numMovesForward);
+         }
+      });
    }
 }

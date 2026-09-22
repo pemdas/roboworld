@@ -14,30 +14,33 @@ public class InterpolatingWorldPositionSource implements WorldPositionSource {
       SINE
    };
 
-   private ContinuousWorldPosition start;
-   private ContinuousWorldPosition end;
-   private double startTime;
-   private double duration;
+   private ContinuousWorldPosition startPosition;
+   private ContinuousWorldPosition endPosition;
+
+   // Local time for the interpolation.
    private Strategy strategy;
    private TimeSource timeSource;
+   private double startTime;
+   private double endTime;
 
-   public InterpolatingWorldPositionSource(ContinuousWorldPosition start, ContinuousWorldPosition end, double startTime,
-         double duration,
-         TimeSource timeSource, Strategy strategy) {
-      assert duration > 0;
-      this.start = start;
-      this.end = end;
-      this.startTime = startTime;
-      this.duration = duration;
+   public InterpolatingWorldPositionSource(ContinuousWorldPosition startPosition, ContinuousWorldPosition endPosition,
+         double startTime, double endTime,
+         TimeSource timeSource,
+         Strategy strategy) {
+      assert endTime > startTime;
+      this.startPosition = new ContinuousWorldPosition(startPosition);
+      this.endPosition = new ContinuousWorldPosition(endPosition);
       this.timeSource = timeSource;
+      this.startTime = startTime;
+      this.endTime = endTime;
       this.strategy = strategy;
    }
 
    @Override
    public ContinuousWorldPosition getPosition() {
-      double p = (timeSource.now() - startTime) / duration;
+      double p = (timeSource.now() - startTime) / (endTime - startTime);
       if (p >= 1.0) {
-         return end;
+         return endPosition;
       }
       switch (strategy) {
          case LINEAR:
@@ -47,8 +50,8 @@ public class InterpolatingWorldPositionSource implements WorldPositionSource {
             p = ((-Math.cos(p * Math.PI) + 1) / 2);
             break;
       }
-      return new ContinuousWorldPosition(start.x() + p * (end.x() - start.x()),
-            start.y() + p * (end.y() - start.y()),
-            start.heading() + p * start.headingOffset(end));
+      return new ContinuousWorldPosition(startPosition.x() + p * (endPosition.x() - startPosition.x()),
+            startPosition.y() + p * (endPosition.y() - startPosition.y()),
+            startPosition.heading() + p * startPosition.headingOffset(endPosition));
    }
 }

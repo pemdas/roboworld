@@ -1,5 +1,6 @@
 package org.rezrov.roboworld;
 
+// 2d integer coordinates.
 public class Coord2D
       implements Comparable<Coord2D> {
    public int x;

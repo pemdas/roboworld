@@ -3,8 +3,6 @@ package org.rezrov.roboworld;
 import java.util.Collections;
 import java.util.LinkedList;
 
-import javax.swing.SwingUtilities;
-
 /**
  * This class takes care of distributing a consistent wall and world time
  * to anyone that wants it.
@@ -27,19 +25,20 @@ public class TimeSource {
       return worldTimeSource;
    }
 
-   // Schedule something to be run when the time according to this TimeSource is at
-   // least t.
+   /**
+    * Schedule something to be run when the time according to this TimeSource is at
+    * least t. If t is in the past, the runnable will be run the next time the
+    * time source advances.
+    * 
+    * Tasks are run on the thread that calls advace() (and so should be short
+    * latency)
+    */
    synchronized public void runAt(double t, Runnable runnable) {
-      if (t <= now) {
-         // Already past, do it now.
-         SwingUtilities.invokeLater(runnable);
-      } else {
-         scheduledTasks.add(new ScheduledTask(t, runnable));
-         // Since we don't expect there to be many scheduled tasks, just sort every
-         // time. If we end up in a situation where we do have a lot of tasks
-         // flying around, revisit this and set up a TreeMap.
-         Collections.sort(scheduledTasks, (a, b) -> Double.compare(a.t, b.t));
-      }
+      scheduledTasks.add(new ScheduledTask(t, runnable));
+      // Since we don't expect there to be many scheduled tasks, just sort every
+      // time. If we end up in a situation where we do have a lot of tasks
+      // flying around, revisit this and set up a TreeMap.
+      Collections.sort(scheduledTasks, (a, b) -> Double.compare(a.t, b.t));
    }
 
    static private class ScheduledTask {
@@ -62,7 +61,7 @@ public class TimeSource {
       while (i.hasNext()) {
          ScheduledTask task = i.next();
          if (task.t <= now) {
-            SwingUtilities.invokeLater(task.runnable);
+            task.runnable.run();
             i.remove();
          } else {
             break;
