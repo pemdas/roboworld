@@ -1,6 +1,8 @@
 package org.rezrov.roboworld;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -23,19 +25,18 @@ public class Scenario {
       abstract public boolean goalSatisfied();
    }
 
-   ArrayList<Goal> goals;
+   ArrayList<Goal> goals = new ArrayList<>();
 
    // TODO - The scenario creation process is a mess. Clean it up.
    // Should have clean separation between scenario elements and practical objects
    // needed to run.
    private Environment env;
    private DiscreteWorldPosition robotStartPosition;
+   private RobotImpl robot;
    private RobotWindow window;
 
    // A description of the scenario, presented to the student.
    private String description;
-
-   private int numGoals;
 
    // (Make goal validation a callback? Makes scenarios impossible to create
    // declaratively, but adds the most flexibility...)
@@ -43,6 +44,46 @@ public class Scenario {
    public Scenario(Environment env, DiscreteWorldPosition robotStartPosition) {
       this.env = env;
       this.robotStartPosition = robotStartPosition;
+      robot = new RobotImpl(env, robotStartPosition);
+   }
+
+   static class WatcherThread extends Thread {
+      Thread watched;
+      Runnable postMortem;
+
+      public WatcherThread(Thread watched, Runnable postMortem) {
+         this.watched = watched;
+         this.postMortem = postMortem;
+      }
+
+      @Override
+      public void run() {
+         while (watched.isAlive()) {
+            try {
+               watched.join();
+            } catch (InterruptedException e) {
+            }
+         }
+         SwingUtilities.invokeLater(postMortem);
+      }
+   }
+
+   public void createWindow() {
+      try {
+         Thread appThread = Thread.currentThread();
+         SwingUtilities.invokeAndWait(() -> {
+            window = new RobotWindow("RoboWorld", appThread, this);
+            window.setVisible(true);
+         });
+      } catch (Exception e) {
+         throw new IllegalStateException(e);
+      }
+      new WatcherThread(Thread.currentThread(), new Runnable() {
+         public void run() {
+            window.setRobotDone();
+         }
+      }).start();
+      robot.setDisplayTarget(window);
    }
 
    // The set of all ending positions for the robot which are considered "correct".
@@ -58,60 +99,55 @@ public class Scenario {
    // Add a goal position for the robot. If the robot ends in any goal position, it
    // has met the goal. If no goal poses are added, then the robot can end in any
    // position.
-   void addGoalPositions(List<Coord2D> positions) {
-
-      if (goalPositions.isEmpty()) {
-         numGoals++;
-      }
-      // goalPositions.add(cell);
+   public void setGoalCells(Collection<Coord2D> cells) {
+      assert !cells.isEmpty();
+      env.setGoalCells(cells);
+      goals.add(new Goal("Robot in " + ((cells.size() > 1) ? "any " : "") + "goal cell") {
+         @Override
+         public boolean goalSatisfied() {
+            return env.isGoalCell(robot.position().asCoord2D());
+         }
+      });
    }
 
-   // Get an array ofstrings, one per goal.
-   public String[] goalDescriptions() {
-      String[] ret = new String[goals.size()];
-      for (int i = 0; i < goals.size(); i++) {
-         ret[i] = goals.get(i).description;
-      }
-      return ret;
+   public DiscreteWorldPosition robotStartPosition() {
+      return robotStartPosition;
    }
 
-   /**
-    * Returns an array of booleans with true for each met goal and false for each
-    * unmet goal
-    */
-   public boolean[] goalStates() {
-      boolean[] ret = new boolean[goals.size()];
-      for (int i = 0; i < goals.size(); i++) {
-         ret[i] = goals.get(i).goalSatisfied();
+   private static String goalMarker(boolean success, boolean appExited) {
+      if (success) {
+         return "🗹";
+      } else if (appExited) {
+         return "🗷";
+      } else {
+         return "☐";
       }
-      return ret;
+   }
+
+   public String goalStatus(boolean appExited) {
+      System.out.println("have " + goals.size() + " goals");
+      String[] lines = new String[goals.size()];
+      for (int i = 0; i < goals.size(); i++) {
+         lines[i] = goalMarker(goals.get(i).goalSatisfied(), appExited) + " - " + goals.get(i).description;
+      }
+      return String.join("\n", lines);
+   }
+
+   public List<Goal> goals() {
+      return goals;
    }
 
    static Robot setUp(int scenarioId) {
-      Scenario scene = createScenarioFromId(scenarioId);
-      try {
-         Thread appThread = Thread.currentThread();
-         SwingUtilities.invokeAndWait(() -> scene.createAndShowGUI(appThread));
-
-      } catch (Exception e) {
-         throw new IllegalStateException(e);
-      }
-      return new RobotImpl(scene.env, scene.robotStartPosition, scene.window);
-   }
-
-   static Scenario createScenarioFromId(int scenarioId) {
+      Scenario s;
       switch (scenarioId) {
          case TEST1:
-            return test1Scene();
+            s = test1Scene();
+            break;
          default:
             throw new NoSuchElementException("Unknown scenario id: " + scenarioId);
       }
-   }
-
-   void createAndShowGUI(Thread appThread) {
-      window = new RobotWindow("RoboWorld", appThread, env, robotStartPosition);
-      window.setVisible(true);
-
+      s.createWindow();
+      return s.robot;
    }
 
    static final public int TEST1 = 0;
@@ -127,15 +163,13 @@ public class Scenario {
             "+ +-+ +\n" +
             "|     |\n" +
             "+-+-+-+\n");
-      return new Scenario(e, new DiscreteWorldPosition(2, 1, Direction.RIGHT));
+      Scenario ret = new Scenario(e, new DiscreteWorldPosition(2, 1, Direction.RIGHT));
+      ret.setGoalCells(Arrays.asList(new Coord2D(0, 0), new Coord2D(0, 1), new Coord2D(2, 1)));
+      return ret;
    }
 
-   public Environment getEnvironment() {
+   public Environment environment() {
       return env;
    }
-
-   // public RobotImpl getRobot() {
-   // return robot;
-   // }
 
 }

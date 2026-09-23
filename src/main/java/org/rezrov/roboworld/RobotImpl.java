@@ -9,18 +9,35 @@ public class RobotImpl implements Robot {
    // private WorldPosition targetPose = null;
    private boolean isCrashed = false;
 
-   private RobotDisplayTarget displayTarget;
+   private RobotDisplayTarget displayTarget = null;
    private RobotStats stats = new RobotStats();
 
    // Animation times for movements at 1x speed.
    private static double TURN_TIME = 0.6;
    private static double MOVE_TIME = 1.0;
 
-   public RobotImpl(Environment env, DiscreteWorldPosition position, RobotDisplayTarget displayTarget) {
+   public RobotImpl(Environment env, DiscreteWorldPosition position) {
       this.env = env;
       this.position = new DiscreteWorldPosition(position);
-      this.displayTarget = displayTarget;
       assert env.isInBounds(position.x(), position.y());
+   }
+
+   /**
+    * Convenience constructor for testing.
+    */
+   public RobotImpl(Environment env, DiscreteWorldPosition position, RobotDisplayTarget displayTarget) {
+      this(env, position);
+      setDisplayTarget(displayTarget);
+   }
+
+   // Robots get a two-phase construction to resolve some circular dependencies
+   // in the scenario set up. We want to be able to construct the robot impl
+   // before the window exists.
+   //
+   // If this is not called before the robot actually starts getting used, you'll
+   // quickly crash.
+   public void setDisplayTarget(RobotDisplayTarget displayTarget) {
+      this.displayTarget = displayTarget;
    }
 
    synchronized public DiscreteWorldPosition position() {

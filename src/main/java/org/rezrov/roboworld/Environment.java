@@ -1,5 +1,8 @@
 package org.rezrov.roboworld;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * This class represents an environment in which a robot operates. This includes
  * the walls and any other items the robot may interact with.
@@ -127,6 +130,20 @@ public class Environment {
             !lines[lines.length - 1].matches(TOP_BOTTOM_REGEX)) {
          throw new MapParseException("Malformed line " + (lines.length));
       }
+   }
+
+   private HashSet<Coord2D> goalCells = new HashSet<>();
+
+   public void setGoalCells(Collection<Coord2D> cells) {
+      goalCells = new HashSet<>(cells);
+   }
+
+   public boolean isGoalCell(Coord2D c) {
+      return goalCells.contains(c);
+   }
+
+   public Collection<Coord2D> goalCells() {
+      return goalCells;
    }
 
    public void addWall(DiscreteWorldPosition pos) {

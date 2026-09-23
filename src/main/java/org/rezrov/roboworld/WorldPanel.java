@@ -9,6 +9,7 @@ import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
@@ -145,6 +146,19 @@ public class WorldPanel extends JPanel {
       float vCellSize = (float) (hPx / (env.getHeight() + WALL_WIDTH));
 
       g.scale(hCellSize, vCellSize);
+
+      // Draw checkered backgrounds on goal cells.
+      int checkers = 6;
+      float ic = 1.0f / checkers;
+      g.setColor(Color.LIGHT_GRAY);
+      for (Coord2D c : env.goalCells()) {
+         for (int x = 0; x < checkers; x++) {
+            for (int y = (x % 2 == 0) ? 0 : 1; y < checkers; y += 2) {
+               g.fill(new Rectangle2D.Float(c.x + x * ic, c.y + y * ic, ic, ic));
+            }
+         }
+      }
+
       g.translate(HALF_WALL_WIDTH, HALF_WALL_WIDTH);
 
       g.setColor(WALL_COLOR);

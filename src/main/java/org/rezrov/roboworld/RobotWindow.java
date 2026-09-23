@@ -4,11 +4,15 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.util.Hashtable;
 
 import javax.swing.BorderFactory;
@@ -16,6 +20,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -28,6 +33,11 @@ import javax.swing.event.ChangeListener;
 
 public class RobotWindow extends JFrame
       implements RobotDisplayTarget {
+
+   static private final BufferedImage SUCCESS_CHECKBOX = Resources.loadImage("success_checkbox.png");
+   static private final BufferedImage FAILED_CHECKBOX = Resources.loadImage("failed_checkbox.png");
+   static private final BufferedImage EMPTY_CHECKBOX = Resources.loadImage("empty_checkbox.png");
+
    // (Maximum) frames per second at which animations run. Note that things will
    // still work correctly if the computer can't maintain this framerate (which,
    // given the modest demands, is a pretty rare situation). We just don't want
@@ -75,6 +85,13 @@ public class RobotWindow extends JFrame
    private JTextField leftTurnCallSites = new JTextField();
    private JTextField rightTurnCallSites = new JTextField();
 
+   // Has the main thread exited?
+   private boolean robotDone = false;
+
+   private Scenario scenario;
+
+   GoalCheckBox[] goalCheckBoxes;
+
    RobotStats robotStats = new RobotStats();
 
    // Timer used to run the update loop.
@@ -89,14 +106,57 @@ public class RobotWindow extends JFrame
       return ret;
    }
 
-   private JPanel createGoalPanel() {
-      JPanel goalPanel = new JPanel();
-      var border = BorderFactory.createTitledBorder("Goals");
-      border.setTitleFont(Resources.MEDIUM_FONT);
-      goalPanel.setBorder(border);
-      goalPanel.add(makeLabel("Foo", Resources.MEDIUM_FONT));
-      goalPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, goalPanel.getPreferredSize().height));
-      return goalPanel;
+   public void setRobotDone() {
+      robotDone = true;
+   }
+
+   class GoalCheckBox extends JPanel {
+      private Scenario.Goal goal;
+
+      GoalCheckBox(Scenario.Goal goal) {
+         this.goal = goal;
+         var size = new Dimension(SUCCESS_CHECKBOX.getWidth(), SUCCESS_CHECKBOX.getHeight());
+         setMaximumSize(size);
+         setMinimumSize(size);
+         setPreferredSize(size);
+      }
+
+      @Override
+      public void paintComponent(Graphics g) {
+         g.clearRect(0, 0, getWidth(), getHeight());
+         BufferedImage img;
+         if (goal.goalSatisfied()) {
+            img = SUCCESS_CHECKBOX;
+         } else if (!robotDone) {
+            img = EMPTY_CHECKBOX;
+         } else {
+            img = FAILED_CHECKBOX;
+         }
+         ((Graphics2D) g).drawRenderedImage(img, new AffineTransform());
+      }
+
+   }
+
+   private JComponent createGoalPanel() {
+      JPanel panel = new JPanel();
+      var goalBorder = BorderFactory.createTitledBorder("Status");
+      goalBorder.setTitleFont(Resources.MEDIUM_FONT);
+      panel.setBorder(goalBorder);
+
+      panel.setLayout(new GridBagLayout());
+      int row = 0;
+      goalCheckBoxes = new GoalCheckBox[scenario.goals().size()];
+      for (var goal : scenario.goals()) {
+         var gbc = new GridBagConstraints();
+         gbc.gridx = 0;
+         gbc.gridy = row;
+         goalCheckBoxes[row] = new GoalCheckBox(goal);
+         panel.add(goalCheckBoxes[row], gbc);
+         gbc.gridx = 1;
+         panel.add(makeLabel(goal.description, Resources.MEDIUM_FONT));
+         row++;
+      }
+      return panel;
    }
 
    private JPanel createStatusPanel() {
@@ -203,12 +263,14 @@ public class RobotWindow extends JFrame
       return bottomPanel;
    }
 
-   public RobotWindow(String title, Thread appThread, Environment env, DiscreteWorldPosition robotStart) {
+   public RobotWindow(String title, Thread appThread, Scenario scenario) {
       super(title);
       this.appThread = appThread;
+      this.scenario = scenario;
       setMinimumSize(new Dimension(600, 400));
       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      worldPanel = new WorldPanel(env, Color.CYAN, TimeSource.worldTimeSource(), robotStart);
+      worldPanel = new WorldPanel(scenario.environment(), Color.CYAN, TimeSource.worldTimeSource(),
+            scenario.robotStartPosition());
       getContentPane().add(worldPanel, BorderLayout.CENTER);
       getContentPane().add(createBottomPanel(), BorderLayout.PAGE_END);
       getContentPane().add(createRightPanel(), BorderLayout.LINE_END);
@@ -230,15 +292,21 @@ public class RobotWindow extends JFrame
       double dt = (now - prevFrameTimeNanos) / 1_000_000_000.0;
       prevFrameTimeNanos = System.nanoTime();
       TimeSource.wallTimeSource().advance(dt);
-      if (!appThread.isAlive()) {
+      if (robotDone) {
          // App thread exited, we don't need to do any more animations, so we can stop
          // this update timer.
          timer.stop();
          running = false;
          playButton.setIcon(playIcon);
          playButton.setEnabled(false);
+         for (GoalCheckBox g : goalCheckBoxes) {
+            g.repaint();
+         }
       } else if (running) {
          TimeSource.worldTimeSource().advance(worldSpeedMultiplier * dt);
+         for (GoalCheckBox g : goalCheckBoxes) {
+            g.repaint();
+         }
       }
       worldPanel.paintImmediately(0, 0, worldPanel.getWidth(), worldPanel.getHeight());
       // X11 likes to kind of nagle algorithm events sometimes, which causes latency.

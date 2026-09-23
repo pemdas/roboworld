@@ -23,9 +23,11 @@ public class Resources {
    final public static BufferedImage PLAY_ICON = loadImage("play_button.png");
    final public static BufferedImage PAUSE_ICON = loadImage("pause_button.png");
 
-   final public static Font LARGE_FONT = new Font("Noto Sans Medium", Font.PLAIN, 16);
-   final public static Font MEDIUM_FONT = new Font("Noto Sans Medium", Font.PLAIN, 16);
-   final public static Font SMALL_FONT = new Font("Noto Sans Medium", Font.PLAIN, 10);
+   final private static String FONT_NAME = "Noto Sans Medium";
+   // final private static String FONT_NAME = "Noto Sans Symbols 2";
+   final public static Font LARGE_FONT = new Font(FONT_NAME, Font.PLAIN, 16);
+   final public static Font MEDIUM_FONT = new Font(FONT_NAME, Font.PLAIN, 16);
+   final public static Font SMALL_FONT = new Font(FONT_NAME, Font.PLAIN, 10);
 
    public static BufferedImage loadImage(String name) {
       try (InputStream in = Resources.class.getResourceAsStream(name)) {
