@@ -12,5 +12,9 @@ public class Example {
       }
       r.turnLeft();
       r.turnLeft();
+      r.moveForward();
+      r.moveForward();
+      r.moveForward();
+      r.moveForward();
    }
 }

@@ -15,23 +15,12 @@ import javax.swing.SwingUtilities;
 // It's also the entry point for users to create a scenario and play it. 
 public class Scenario {
 
-   abstract class Goal {
-      String description;
-
-      public Goal(String description) {
-         this.description = description;
-      }
-
-      abstract public boolean goalSatisfied();
-   }
-
    ArrayList<Goal> goals = new ArrayList<>();
 
    // TODO - The scenario creation process is a mess. Clean it up.
    // Should have clean separation between scenario elements and practical objects
    // needed to run.
    private Environment env;
-   private DiscreteWorldPosition robotStartPosition;
    private RobotImpl robot;
    private RobotWindow window;
 
@@ -43,11 +32,13 @@ public class Scenario {
 
    public Scenario(Environment env, DiscreteWorldPosition robotStartPosition) {
       this.env = env;
-      this.robotStartPosition = robotStartPosition;
-      robot = new RobotImpl(env, robotStartPosition);
+      this.robot = new RobotImpl(env, robotStartPosition);
    }
 
-   static class WatcherThread extends Thread {
+   // This is a little specialized thread that just exists to wait until
+   // the main application thread finishes and notify the other threads
+   // that the robot will not be doing anything else.
+   private static class WatcherThread extends Thread {
       Thread watched;
       Runnable postMortem;
 
@@ -68,11 +59,14 @@ public class Scenario {
       }
    }
 
+   public RobotImpl robot() {
+      return robot;
+   }
+
    public void createWindow() {
       try {
-         Thread appThread = Thread.currentThread();
          SwingUtilities.invokeAndWait(() -> {
-            window = new RobotWindow("RoboWorld", appThread, this);
+            window = new RobotWindow("RoboWorld", this);
             window.setVisible(true);
          });
       } catch (Exception e) {
@@ -87,12 +81,16 @@ public class Scenario {
    }
 
    // The set of all ending positions for the robot which are considered "correct".
-   // If empty, any
-   // ending position is considered correct.
+   // If empty, any ending position is considered correct.
    HashSet<Coord2D> goalPositions = new HashSet<>();
 
    // Add a goal that the robot must not crash.
    void addNoCrashGoal() {
+      goals.add(new Goal("No crashes") {
+         public boolean goalSatisfied() {
+            return !robot.crashed();
+         }
+      });
 
    }
 
@@ -108,10 +106,6 @@ public class Scenario {
             return env.isGoalCell(robot.position().asCoord2D());
          }
       });
-   }
-
-   public DiscreteWorldPosition robotStartPosition() {
-      return robotStartPosition;
    }
 
    private static String goalMarker(boolean success, boolean appExited) {
@@ -164,6 +158,7 @@ public class Scenario {
             "|     |\n" +
             "+-+-+-+\n");
       Scenario ret = new Scenario(e, new DiscreteWorldPosition(2, 1, Direction.RIGHT));
+      ret.addNoCrashGoal();
       ret.setGoalCells(Arrays.asList(new Coord2D(0, 0), new Coord2D(0, 1), new Coord2D(2, 1)));
       return ret;
    }

@@ -4,15 +4,11 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.AffineTransform;
-import java.awt.image.BufferedImage;
 import java.util.Hashtable;
 
 import javax.swing.BorderFactory;
@@ -33,10 +29,6 @@ import javax.swing.event.ChangeListener;
 
 public class RobotWindow extends JFrame
       implements RobotDisplayTarget {
-
-   static private final BufferedImage SUCCESS_CHECKBOX = Resources.loadImage("success_checkbox.png");
-   static private final BufferedImage FAILED_CHECKBOX = Resources.loadImage("failed_checkbox.png");
-   static private final BufferedImage EMPTY_CHECKBOX = Resources.loadImage("empty_checkbox.png");
 
    // (Maximum) frames per second at which animations run. Note that things will
    // still work correctly if the computer can't maintain this framerate (which,
@@ -64,33 +56,22 @@ public class RobotWindow extends JFrame
    private ImageIcon playIcon = new ImageIcon(Resources.PLAY_ICON);
    private ImageIcon pauseIcon = new ImageIcon(Resources.PAUSE_ICON);
 
-   // The application (not swing) thread. We have a reference here so
-   // we can detect when the student's code has finished (because the
-   // application thread has exited). This is really kludgy, but seems
-   // to work ok, and obviates any need for the student code to call some
-   // method to indicate it has finished.
-   //
-   // If java had support for installing a Runnable or similar to be
-   // invoked on thread exit, that would be a better way to do this, but
-   // I've not found anything (portable) that allows for this on the
-   // application thread.
-   private Thread appThread;
-
    // Status elements, used to report how many times the robot has done
    // each thing it does.
    private JTextField movesStatus = new JTextField();
    private JTextField leftTurnsStatus = new JTextField();
    private JTextField rightTurnsStatus = new JTextField();
-   private JTextField moveCallSites = new JTextField();
-   private JTextField leftTurnCallSites = new JTextField();
-   private JTextField rightTurnCallSites = new JTextField();
+   private JTextField moveCallSitesStatus = new JTextField();
+   private JTextField leftTurnCallSitesStatus = new JTextField();
+   private JTextField rightTurnCallSitesStatus = new JTextField();
 
-   // Has the main thread exited?
+   // Has the main thread exited (and thus we won't see any more commands from a
+   // Robot)?
    private boolean robotDone = false;
 
    private Scenario scenario;
 
-   GoalCheckBox[] goalCheckBoxes;
+   GoalStatus[] goalStatuses;
 
    RobotStats robotStats = new RobotStats();
 
@@ -110,52 +91,33 @@ public class RobotWindow extends JFrame
       robotDone = true;
    }
 
-   class GoalCheckBox extends JPanel {
-      private Scenario.Goal goal;
-
-      GoalCheckBox(Scenario.Goal goal) {
-         this.goal = goal;
-         var size = new Dimension(SUCCESS_CHECKBOX.getWidth(), SUCCESS_CHECKBOX.getHeight());
-         setMaximumSize(size);
-         setMinimumSize(size);
-         setPreferredSize(size);
-      }
-
-      @Override
-      public void paintComponent(Graphics g) {
-         g.clearRect(0, 0, getWidth(), getHeight());
-         BufferedImage img;
-         if (goal.goalSatisfied()) {
-            img = SUCCESS_CHECKBOX;
-         } else if (!robotDone) {
-            img = EMPTY_CHECKBOX;
-         } else {
-            img = FAILED_CHECKBOX;
-         }
-         ((Graphics2D) g).drawRenderedImage(img, new AffineTransform());
-      }
-
-   }
-
    private JComponent createGoalPanel() {
       JPanel panel = new JPanel();
-      var goalBorder = BorderFactory.createTitledBorder("Status");
+      var goalBorder = BorderFactory.createTitledBorder("Goals");
       goalBorder.setTitleFont(Resources.MEDIUM_FONT);
       panel.setBorder(goalBorder);
 
       panel.setLayout(new GridBagLayout());
       int row = 0;
-      goalCheckBoxes = new GoalCheckBox[scenario.goals().size()];
+      goalStatuses = new GoalStatus[scenario.goals().size()];
+
       for (var goal : scenario.goals()) {
          var gbc = new GridBagConstraints();
+         gbc.insets.left = 10;
+         gbc.insets.right = 10;
+
          gbc.gridx = 0;
          gbc.gridy = row;
-         goalCheckBoxes[row] = new GoalCheckBox(goal);
-         panel.add(goalCheckBoxes[row], gbc);
-         gbc.gridx = 1;
-         panel.add(makeLabel(goal.description, Resources.MEDIUM_FONT));
+         gbc.fill = GridBagConstraints.NONE;
+         goalStatuses[row] = new GoalStatus(goal);
+         panel.add(goalStatuses[row], gbc);
          row++;
       }
+      // ALlow maximum size horizontally to be large so we fill the pane,
+      // vertically, take minimum space
+      Dimension maxSize = panel.getPreferredSize();
+      maxSize.width = Integer.MAX_VALUE;
+      panel.setMaximumSize(maxSize);
       return panel;
    }
 
@@ -166,9 +128,12 @@ public class RobotWindow extends JFrame
       statusPanel.setBorder(statusBorder);
       statusPanel.setLayout(new GridBagLayout());
 
-      String[] statusLabels = { "Moves:", "Left Turns:", "Right Turns:" };
+      String[] statusLabels = { "Moves:", "Left Turns:", "Right Turns:", "Move Callsites:", "Left Turn Callsites",
+            "Right Turn Callsites" };
 
-      JTextField[] statusFields = { movesStatus, leftTurnsStatus, rightTurnsStatus };
+      JTextField[] statusFields = { movesStatus, leftTurnsStatus, rightTurnsStatus, moveCallSitesStatus,
+            leftTurnCallSitesStatus, rightTurnCallSitesStatus
+      };
       assert statusLabels.length == statusFields.length;
       var c = new GridBagConstraints();
       c.insets.top = 5;
@@ -191,7 +156,7 @@ public class RobotWindow extends JFrame
          c.insets.right = 10;
          c.fill = GridBagConstraints.NONE;
          statusFields[i].setText("0");
-         statusFields[i].setFont(Resources.MEDIUM_FONT);
+         // statusFields[i].setFont(Resources.MEDIUM_FONT);
          statusFields[i].setHorizontalAlignment(SwingConstants.CENTER);
          statusFields[i].setEditable(false);
          statusFields[i].setBackground(Color.WHITE);
@@ -263,14 +228,13 @@ public class RobotWindow extends JFrame
       return bottomPanel;
    }
 
-   public RobotWindow(String title, Thread appThread, Scenario scenario) {
+   public RobotWindow(String title, Scenario scenario) {
       super(title);
-      this.appThread = appThread;
       this.scenario = scenario;
       setMinimumSize(new Dimension(600, 400));
       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       worldPanel = new WorldPanel(scenario.environment(), Color.CYAN, TimeSource.worldTimeSource(),
-            scenario.robotStartPosition());
+            scenario.robot().position());
       getContentPane().add(worldPanel, BorderLayout.CENTER);
       getContentPane().add(createBottomPanel(), BorderLayout.PAGE_END);
       getContentPane().add(createRightPanel(), BorderLayout.LINE_END);
@@ -299,19 +263,21 @@ public class RobotWindow extends JFrame
          running = false;
          playButton.setIcon(playIcon);
          playButton.setEnabled(false);
-         for (GoalCheckBox g : goalCheckBoxes) {
-            g.repaint();
-         }
+         updateGoalsStatus();
       } else if (running) {
          TimeSource.worldTimeSource().advance(worldSpeedMultiplier * dt);
-         for (GoalCheckBox g : goalCheckBoxes) {
-            g.repaint();
-         }
+         updateGoalsStatus();
       }
       worldPanel.paintImmediately(0, 0, worldPanel.getWidth(), worldPanel.getHeight());
       // X11 likes to kind of nagle algorithm events sometimes, which causes latency.
       // Flush rendering out immediately.
       Toolkit.getDefaultToolkit().sync();
+   }
+
+   private void updateGoalsStatus() {
+      for (var g : goalStatuses) {
+         g.update();
+      }
    }
 
    // Note this is called from the application thread, not the Swing thread.
@@ -343,6 +309,9 @@ public class RobotWindow extends JFrame
             leftTurnsStatus.setText("" + copy.numTurnsLeft);
             rightTurnsStatus.setText("" + copy.numTurnsRight);
             movesStatus.setText("" + copy.numMovesForward);
+            leftTurnCallSitesStatus.setText("" + copy.numTurnLeftCallSites);
+            rightTurnCallSitesStatus.setText("" + copy.numTurnRightCallSites);
+            moveCallSitesStatus.setText("" + copy.numMoveForwardCallSites);
          }
       });
    }
