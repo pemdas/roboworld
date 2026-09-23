@@ -4,12 +4,13 @@ import java.util.HashSet;
 
 public class RobotImpl implements Robot {
    private Environment env;
-   private DiscreteWorldPosition position;
-   // private WorldPosition pose;
-   // private WorldPosition targetPose = null;
-   private boolean isCrashed = false;
-
    private RobotDisplayTarget displayTarget = null;
+
+   // Access to these fields may happen from multipke threads, and so
+   // must be done under the (object) lock. Also, no thread should sleep
+   // holding the lock.
+   private DiscreteWorldPosition position;
+   private boolean isCrashed = false;
    private RobotStats stats = new RobotStats();
 
    // Animation times for movements at 1x speed.
@@ -44,46 +45,52 @@ public class RobotImpl implements Robot {
       return position;
    }
 
+   // Functionality common to all the movement methods. Determine the
+   // starting and ending positions in continuous space (under lock),
+   // drop the lock to actually do the displayed move, then update the position.
+   private void moveCommon(DiscreteWorldPosition nextPosition, double movementTime) {
+      ContinuousWorldPosition startPos, endPos;
+      synchronized (this) {
+         startPos = position.asContinuous();
+         endPos = nextPosition.asContinuous();
+      }
+      // May put thread to sleep, so can't hold the lock here.
+      moveDisplayed(startPos, endPos, movementTime);
+      synchronized (this) {
+         position = nextPosition;
+      }
+   }
+
    private HashSet<StackTraceElement> turnLeftCallSites = new HashSet<>();
 
    /** Turn left 90 degrees. If the robot has crashed, this doesn't do anything. */
    public void turnLeft() {
-      ContinuousWorldPosition startPos, endPos;
+      if (crashed())
+         return;
+      // Use position accessor to access under lock
+      moveCommon(position().left(), TURN_TIME);
       synchronized (this) {
-         if (isCrashed) {
-            return;
-         }
-         ++stats.numTurnsLeft;
          if (turnLeftCallSites.add(Thread.currentThread().getStackTrace()[2])) {
             ++stats.numTurnLeftCallSites;
          }
          displayTarget.updateRobotStats(stats);
-         startPos = position.asContinuous();
-         position = position.left();
-         endPos = position.asContinuous();
       }
-      moveDisplayed(startPos, endPos, TURN_TIME);
    }
 
    private HashSet<StackTraceElement> turnRightCallSites = new HashSet<>();
 
    /** Turn right 90 degrees */
    public void turnRight() {
-      ContinuousWorldPosition startPos, endPos;
+      // Use position accessor to access under lock
+      if (crashed())
+         return;
+      moveCommon(position().right(), TURN_TIME);
       synchronized (this) {
-         if (isCrashed) {
-            return;
-         }
-         ++stats.numTurnsRight;
          if (turnRightCallSites.add(Thread.currentThread().getStackTrace()[2])) {
             ++stats.numTurnRightCallSites;
          }
          displayTarget.updateRobotStats(stats);
-         startPos = position.asContinuous();
-         position = position.right();
-         endPos = position.asContinuous();
       }
-      moveDisplayed(startPos, endPos, TURN_TIME);
    }
 
    private HashSet<StackTraceElement> moveForwardCallSites = new HashSet<>();
@@ -104,19 +111,18 @@ public class RobotImpl implements Robot {
          if (blocked()) {
             isCrashed = true;
          }
-         if (isCrashed) {
-            return;
-         }
+      }
+      if (crashed()) {
+         return;
+      }
+      moveCommon(position.forward(), MOVE_TIME);
+      synchronized (this) {
          ++stats.numMovesForward;
          if (moveForwardCallSites.add(Thread.currentThread().getStackTrace()[2])) {
             ++stats.numMoveForwardCallSites;
          }
          displayTarget.updateRobotStats(stats);
-         startPos = position.asContinuous();
-         position = position.forward();
-         endPos = position.asContinuous();
       }
-      moveDisplayed(startPos, endPos, MOVE_TIME);
    }
 
    /**

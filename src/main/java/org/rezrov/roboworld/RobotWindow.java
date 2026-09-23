@@ -2,6 +2,7 @@ package org.rezrov.roboworld;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -97,20 +98,14 @@ public class RobotWindow extends JFrame
       goalBorder.setTitleFont(Resources.MEDIUM_FONT);
       panel.setBorder(goalBorder);
 
-      panel.setLayout(new GridBagLayout());
+      panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
       int row = 0;
       goalStatuses = new GoalStatus[scenario.goals().size()];
 
       for (var goal : scenario.goals()) {
-         var gbc = new GridBagConstraints();
-         gbc.insets.left = 10;
-         gbc.insets.right = 10;
-
-         gbc.gridx = 0;
-         gbc.gridy = row;
-         gbc.fill = GridBagConstraints.NONE;
          goalStatuses[row] = new GoalStatus(goal);
-         panel.add(goalStatuses[row], gbc);
+         goalStatuses[row].setAlignmentX(Component.LEFT_ALIGNMENT);
+         panel.add(goalStatuses[row]);
          row++;
       }
       // ALlow maximum size horizontally to be large so we fill the pane,
@@ -118,6 +113,7 @@ public class RobotWindow extends JFrame
       Dimension maxSize = panel.getPreferredSize();
       maxSize.width = Integer.MAX_VALUE;
       panel.setMaximumSize(maxSize);
+      panel.setAlignmentX(Component.LEFT_ALIGNMENT);
       return panel;
    }
 
@@ -128,8 +124,8 @@ public class RobotWindow extends JFrame
       statusPanel.setBorder(statusBorder);
       statusPanel.setLayout(new GridBagLayout());
 
-      String[] statusLabels = { "Moves:", "Left Turns:", "Right Turns:", "Move Callsites:", "Left Turn Callsites",
-            "Right Turn Callsites" };
+      String[] statusLabels = { "Moves:", "Left Turns:", "Right Turns:", "Move Callsites:", "Left Turn Callsites:",
+            "Right Turn Callsites:" };
 
       JTextField[] statusFields = { movesStatus, leftTurnsStatus, rightTurnsStatus, moveCallSitesStatus,
             leftTurnCallSitesStatus, rightTurnCallSitesStatus
@@ -166,6 +162,8 @@ public class RobotWindow extends JFrame
       }
 
       statusPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, statusPanel.getPreferredSize().height));
+      statusPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
       return statusPanel;
    }
 
