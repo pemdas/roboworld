@@ -9,12 +9,16 @@ import org.junit.jupiter.api.Test;
 public class RobotImplTest {
    static class FakeRobotDisplayTarget
          implements RobotDisplayTarget {
-      @Override
       public void updateRobotStats(RobotStats stats) {
       }
 
-      @Override
       public void moveRobot(ContinuousWorldPosition start, ContinuousWorldPosition end, double movementTime) {
+      }
+
+      public void setRobotCarriedItem(Item item) {
+      }
+
+      public void setRobotDone() {
       }
    }
 

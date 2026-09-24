@@ -15,7 +15,7 @@ public class GoalStatus extends JPanel {
       checkBox = new GoalCheckBox(goal);
       add(checkBox);
       add(Box.createRigidArea(new Dimension(5, 0)));
-      JLabel desc = new JLabel(goal.description);
+      JLabel desc = new JLabel(goal.description());
       desc.setFont(Resources.MEDIUM_FONT);
       add(desc);
       add(Box.createHorizontalGlue());

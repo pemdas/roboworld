@@ -35,6 +35,7 @@ public class WorldPanel extends JPanel {
 
    // Robot sprite.
    private PositionedWorldDrawable robotSprite;
+   private Item robotCarriedItem = Item.NONE;
 
    // Color used to fill in bars at the edges when the aspect ratio isn't perfect.
    private Color letterboxColor;
@@ -102,6 +103,9 @@ public class WorldPanel extends JPanel {
       }
 
       robotSprite.draw(g);
+      if (robotCarriedItem != Item.NONE) {
+         Resources.drawImage(g, ItemResources.drawableFor(robotCarriedItem), robotSprite.getPosition());
+      }
 
       g.setTransform(savedTransform);
    }
@@ -201,6 +205,10 @@ public class WorldPanel extends JPanel {
       }
 
       cachedTransform = g.getTransform();
+   }
+
+   public void setRobotCarriedItem(Item item) {
+      robotCarriedItem = item;
    }
 
    synchronized public void moveRobot(ContinuousWorldPosition from, ContinuousWorldPosition to, double movementTime) {

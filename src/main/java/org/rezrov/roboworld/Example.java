@@ -5,16 +5,22 @@ public class Example {
       Robot r = Scenario.setUp(Scenario.TEST1);
       r.turnLeft();
       r.moveForward();
-      for (int i = 0; i < 100; i++) {
-         r.turnRight();
-         r.turnRight();
-         r.moveForward();
-      }
-      r.turnLeft();
       r.turnLeft();
       r.moveForward();
+      r.grab();
+      r.moveForward();
+      r.turnLeft();
+      r.moveForward();
+      r.drop();
+      r.moveForward();
+      r.grab();
+      r.moveForward();
+      r.turnLeft();
       r.moveForward();
       r.moveForward();
+      r.turnLeft();
+      r.moveForward();
+      r.drop();
       r.moveForward();
    }
 }

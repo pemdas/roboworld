@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.TreeMap;
 
 import javax.swing.SwingUtilities;
 
@@ -22,13 +23,10 @@ public class Scenario {
    // needed to run.
    private Environment env;
    private RobotImpl robot;
-   private RobotWindow window;
+   private RobotDisplayTarget window;
 
    // A description of the scenario, presented to the student.
-   private String description;
-
-   // (Make goal validation a callback? Makes scenarios impossible to create
-   // declaratively, but adds the most flexibility...)
+   // private String description;
 
    public Scenario(Environment env, DiscreteWorldPosition robotStartPosition) {
       this.env = env;
@@ -64,13 +62,19 @@ public class Scenario {
    }
 
    public void createWindow() {
-      try {
-         SwingUtilities.invokeAndWait(() -> {
-            window = new RobotWindow("RoboWorld", this);
-            window.setVisible(true);
-         });
-      } catch (Exception e) {
-         throw new IllegalStateException(e);
+      String display = System.getProperty("roboworld.display", "gui");
+      if (display.equals("gui")) {
+         try {
+            SwingUtilities.invokeAndWait(() -> {
+               window = new RobotWindow("RoboWorld", this);
+            });
+         } catch (Exception e) {
+            throw new IllegalStateException(e);
+         }
+      } else if (display.equals("console")) {
+         window = new ConsoleRobotDisplayTarget(this);
+      } else {
+         throw new RuntimeException("Unknown roboworld.display value: '" + display + "'");
       }
       new WatcherThread(Thread.currentThread(), new Runnable() {
          public void run() {
@@ -91,7 +95,31 @@ public class Scenario {
             return !robot.crashed();
          }
       });
+   }
 
+   // Add a goal that all items are in item goal spots.
+   // This is separated out into a goal for each type of item that exists in the
+   // world.
+   void addItemsGoals() {
+      // Determine which items exist.
+      TreeMap<Item, Integer> itemCount = new TreeMap<Item, Integer>();
+      for (Item item : env.items().values()) {
+         itemCount.put(item, itemCount.getOrDefault(item, 0) + 1);
+      }
+
+      for (var entry : itemCount.entrySet()) {
+         String goalDesc;
+         if (entry.getValue() > 1) {
+            goalDesc = "All " + entry.getKey() + "s in right places";
+         } else {
+            goalDesc = entry.getKey() + " in right place";
+         }
+         goals.add(new Goal(goalDesc) {
+            public boolean goalSatisfied() {
+               return robot.itemInHand() != entry.getKey() && env.allItemsAtGoals(entry.getKey());
+            }
+         });
+      }
    }
 
    // Add a goal position for the robot. If the robot ends in any goal position, it
@@ -106,25 +134,6 @@ public class Scenario {
             return env.isGoalCell(robot.position().asCoord2D());
          }
       });
-   }
-
-   private static String goalMarker(boolean success, boolean appExited) {
-      if (success) {
-         return "🗹";
-      } else if (appExited) {
-         return "🗷";
-      } else {
-         return "☐";
-      }
-   }
-
-   public String goalStatus(boolean appExited) {
-      System.out.println("have " + goals.size() + " goals");
-      String[] lines = new String[goals.size()];
-      for (int i = 0; i < goals.size(); i++) {
-         lines[i] = goalMarker(goals.get(i).goalSatisfied(), appExited) + " - " + goals.get(i).description;
-      }
-      return String.join("\n", lines);
    }
 
    public List<Goal> goals() {
@@ -164,7 +173,7 @@ public class Scenario {
       e.putItem(new Coord2D(0, 2), Item.KIKI);
 
       Scenario ret = new Scenario(e, new DiscreteWorldPosition(2, 1, Direction.RIGHT));
-
+      ret.addItemsGoals();
       ret.addNoCrashGoal();
       ret.setGoalCells(Arrays.asList(new Coord2D(0, 0), new Coord2D(0, 1), new Coord2D(2, 1)));
       return ret;
@@ -173,5 +182,4 @@ public class Scenario {
    public Environment environment() {
       return env;
    }
-
 }

@@ -13,6 +13,8 @@ public class RobotImpl implements Robot {
    private boolean isCrashed = false;
    private RobotStats stats = new RobotStats();
 
+   private Item itemInHand = Item.NONE;
+
    // Animation times for movements at 1x speed.
    private static double TURN_TIME = 0.6;
    private static double MOVE_TIME = 1.0;
@@ -132,4 +134,42 @@ public class RobotImpl implements Robot {
    public synchronized boolean crashed() {
       return isCrashed;
    }
+
+   public synchronized Item itemInHand() {
+      return itemInHand;
+   }
+
+   synchronized public Item itemOnGround() {
+      return env.itemAt(position.asCoord2D());
+   }
+
+   synchronized public void grab() {
+      if (isCrashed) {
+         return;
+      }
+      if (itemInHand != Item.NONE) {
+         isCrashed = true;
+      } else {
+         itemInHand = env.takeItem(position.asCoord2D());
+         if (itemInHand == Item.NONE) {
+            isCrashed = true;
+         } else {
+            displayTarget.setRobotCarriedItem(itemInHand);
+         }
+      }
+   }
+
+   synchronized public void drop() {
+      if (isCrashed) {
+         return;
+      }
+      if (itemInHand == Item.NONE || !env.putItem(position.asCoord2D(), itemInHand)) {
+         isCrashed = true;
+      } else {
+         // Successfully dropped.
+         itemInHand = Item.NONE;
+         displayTarget.setRobotCarriedItem(Item.NONE);
+      }
+   }
+
 }

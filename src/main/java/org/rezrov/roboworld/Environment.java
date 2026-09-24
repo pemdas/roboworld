@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class represents an environment in which a robot operates. This includes
@@ -32,15 +33,14 @@ public class Environment {
    private boolean[][] rightWalls;
    private boolean[][] bottomWalls;
 
-   private Map<Coord2D, Item> items = new HashMap<>();
-
+   // Since the items map is modified by the application thread, it must
+   // support concurrent access. Note the itemGoals doesn't have the same
+   // requirement.
+   //
+   // The rendering threads iterate over items via entrySet. The weakly consistent
+   // guarantees of the set view are ok for that purpose.
+   private Map<Coord2D, Item> items = new ConcurrentHashMap<>();
    private Map<Coord2D, Item> itemGoals = new HashMap<>();
-
-   // Cell item contents (or NONE)
-   // private Item[][] items;
-
-   // Cell item goal (or NONE)
-   // private Item[][] itemGoals;
 
    /**
     * Create an empty environment of the given size.
@@ -58,7 +58,7 @@ public class Environment {
 
    }
 
-   // Add an item goal location to
+   // Add an item goal location to the world.
    public void addItemGoal(Coord2D location, Item item) {
       if (itemGoals.putIfAbsent(location, item) != null) {
          // Since we should only be adding item goals at scenario setup, this is a hard
@@ -89,25 +89,17 @@ public class Environment {
       return items.getOrDefault(location, Item.NONE);
    }
 
-   // Returns true iff all the items in the environment are at locations which
-   // are goals for that item.
-   public boolean allItemsAtGoals() {
+   // Returns true iff all the items of this type in the environment are at
+   // locations which are goals for that item type.
+   public boolean allItemsAtGoals(Item itemType) {
       // For each item, the corresponding itemGoal map should have an entry with
       // the same item.
       for (var entry : items.entrySet()) {
          assert entry.getValue() != Item.NONE;
-         if (itemGoals.getOrDefault(entry.getKey(), Item.NONE) != entry.getValue()) {
-            return false;
+         if (entry.getValue() != itemType) {
+            continue;
          }
-      }
-      return true;
-   }
-
-   // Returns true iff all the items goals contain corresponding items.
-   public boolean allItemsGoalsHaveItems() {
-      for (var entry : itemGoals.entrySet()) {
-         assert entry.getValue() != Item.NONE;
-         if (items.getOrDefault(entry.getKey(), Item.NONE) != entry.getValue()) {
+         if (itemGoals.getOrDefault(entry.getKey(), Item.NONE) != entry.getValue()) {
             return false;
          }
       }

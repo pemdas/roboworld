@@ -247,6 +247,7 @@ public class RobotWindow extends JFrame
       });
       prevFrameTimeNanos = System.nanoTime();
       timer.start();
+      setVisible(true);
    }
 
    public void timerFired() {
@@ -296,6 +297,15 @@ public class RobotWindow extends JFrame
       // Don't hold the lock for this object while the robot moves.
       assert !Thread.holdsLock(this);
       worldPanel.moveRobot(from, to, movementTime);
+   }
+
+   @Override
+   public void setRobotCarriedItem(Item item) {
+      SwingUtilities.invokeLater(new Runnable() {
+         public void run() {
+            worldPanel.setRobotCarriedItem(item);
+         }
+      });
    }
 
    // Note this is called from the application thread, not the Swing thread.
