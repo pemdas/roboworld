@@ -16,17 +16,7 @@ It's inspired by [Karel the Robot](https://compedu.stanford.edu/karel-reader/doc
 
 Pull requests are welcome.  As with any open source project, you're strongly encouraged to discuss features and ideas before generating pull requests; the right way to do that here is via the GitHub issue tracker.  There is not at present an official Discord or similar.  You're also welcome to email me at [foozle+roboworld@gmail.com](mailto:foozle+roboworld@gmail.com)
 
-New code should ideally include unit test coverage.
-
 If you want to reuse code from another open source project, please clearly identify the source of the code and be sure to adhere to the license of the original code.
-
-<ul>
-#### Artificial Intelligence Policy
-
-All submissions must be from a human.  It's permissible to use AI to help you code a contribution, but ultimately a human must be responsible for ensuring that the resulting code is correct and comprehensible.
-
-AI-generated assets (sprites, sounds, etc) are not accepted in this project.
-</ul>
 
 ## Versioning
 As of this writing the version is 0.1, meaning the library is still in the "initial hacking" state.  If the current state works for your purposes, please do feel free to use it!  However, the architecture may shift radically as I continue to develop it.  

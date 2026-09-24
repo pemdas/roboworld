@@ -49,13 +49,14 @@ public class RobotImpl implements Robot {
    // starting and ending positions in continuous space (under lock),
    // drop the lock to actually do the displayed move, then update the position.
    private void moveCommon(DiscreteWorldPosition nextPosition, double movementTime) {
+      // This method may put thread to sleep, so can't hold the lock when entering.
+      assert !Thread.holdsLock(this);
       ContinuousWorldPosition startPos, endPos;
       synchronized (this) {
          startPos = position.asContinuous();
          endPos = nextPosition.asContinuous();
       }
-      // May put thread to sleep, so can't hold the lock here.
-      moveDisplayed(startPos, endPos, movementTime);
+      displayTarget.moveRobot(startPos, endPos, movementTime);
       synchronized (this) {
          position = nextPosition;
       }
@@ -95,18 +96,7 @@ public class RobotImpl implements Robot {
 
    private HashSet<StackTraceElement> moveForwardCallSites = new HashSet<>();
 
-   // Invoke with care. The application thread may be suspended while the
-   // display is updated, and the display may want to grab the position of the
-   // robot while the application thread is suspended. This, we should *never*
-   // call this while locked, since we could cause a deadlock.
-   private void moveDisplayed(ContinuousWorldPosition curPosition, ContinuousWorldPosition nextPosition,
-         double movementTime) {
-      assert !Thread.holdsLock(this);
-      displayTarget.moveRobot(curPosition, nextPosition, movementTime);
-   }
-
    public void moveForward() {
-      ContinuousWorldPosition startPos, endPos;
       synchronized (this) {
          if (blocked()) {
             isCrashed = true;
@@ -130,8 +120,8 @@ public class RobotImpl implements Robot {
     * 
     * @return true if the way is blocked, false otherwise.
     */
-   public synchronized boolean blocked() {
-      return env.isFacingWall(position);
+   public boolean blocked() {
+      return env.isFacingWall(position());
    }
 
    /**

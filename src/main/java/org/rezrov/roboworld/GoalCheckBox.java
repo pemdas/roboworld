@@ -12,8 +12,8 @@ import javax.swing.JPanel;
 class GoalCheckBox extends JPanel {
    private Goal goal;
    private boolean renderedGoalState;
-   static private final BufferedImage SUCCESS_CHECKBOX = Resources.loadImage("success_checkbox.png");
-   static private final BufferedImage FAILED_CHECKBOX = Resources.loadImage("failed_checkbox.png");
+   static private final BufferedImage SUCCESS_CHECKBOX = Resources.loadImage("goal_success_checkbox_icon.png");
+   static private final BufferedImage FAILED_CHECKBOX = Resources.loadImage("goal_failed_checkbox_icon.png");
    // static private final BufferedImage EMPTY_CHECKBOX =
    // Resources.loadImage("empty_checkbox.png");
 

@@ -54,7 +54,7 @@ public class WorldPanel extends JPanel {
       this.env = env;
       this.letterboxColor = letterboxColor;
       this.worldTimeSource = worldTimeSource;
-      robotSprite = new WorldStaticSprite(Resources.ROBOT_SPRITE, Resources.ROBOT_SPRITE_CELL_SCALE);
+      robotSprite = new WorldStaticSprite(Resources.ROBOT_SPRITE);
       robotSprite.setPosition(startingRobotPosition.asContinuous());
    }
 

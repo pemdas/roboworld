@@ -8,6 +8,7 @@ import java.util.HashSet;
  * the walls and any other items the robot may interact with.
  */
 public class Environment {
+
    // Dimensions of the map. Valid robot x positions are from 0...width-1 and
    // y positions are from 0...height - 1. The map is always rectangular (though
    // it's not a requirement that all areas of the map be reachable).
@@ -29,6 +30,12 @@ public class Environment {
    private boolean[][] rightWalls;
    private boolean[][] bottomWalls;
 
+   // Cell item contents (or NONE)
+   private Item[][] items;
+
+   // Cell item goal (or NONE)
+   private Item[][] itemGoals;
+
    /**
     * Create an empty environment of the given size.
     */
@@ -42,6 +49,62 @@ public class Environment {
       // bottom row has implicit bottom walls.
       rightWalls = new boolean[width - 1][height];
       bottomWalls = new boolean[width][height - 1];
+
+      items = new Item[width][height];
+      itemGoals = new Item[width][height];
+      for (int x = 0; x < width; x++) {
+         for (int y = 0; y < height; y++) {
+            items[x][y] = itemGoals[x][y] = Item.NONE;
+         }
+      }
+   }
+
+   // Add an item goal location to
+   public void addItemGoalLocation(Item item, Coord2D location) {
+      if (itemGoals[location.x][location.y] != Item.NONE) {
+         // Since we should only be adding item goals at scenario setup, this is a hard
+         // error.
+         throw new IllegalStateException("Attempt to put two item goals in the same location");
+      }
+   }
+
+   public boolean addItemLocation(Item item, Coord2D location) {
+      if (items[location.x][location.y] != Item.NONE) {
+         // The robot can try to drop things in squares that already have a thing, and we
+         // want to crash the robot in that case, which is why this is a soft error.
+         return false;
+      }
+      items[location.x][location.y] = item;
+      return true;
+   }
+
+   public Item itemAt(Coord2D location) {
+      return items[location.x][location.y];
+   }
+
+   // Returns true if all the items in the environment are
+   public boolean allItemsAtGoals() {
+      for (int x = 0; x < width; x++) {
+         for (int y = 0; y < height; y++) {
+            if (items[x][y] != Item.NONE &&
+                  items[x][y] != itemGoals[x][y]) {
+               return false;
+            }
+         }
+      }
+      return true;
+   }
+
+   public boolean allItemsGoalsHaveItems() {
+      for (int x = 0; x < width; x++) {
+         for (int y = 0; y < height; y++) {
+            if (itemGoals[x][y] != Item.NONE &&
+                  items[x][y] != itemGoals[x][y]) {
+               return false;
+            }
+         }
+      }
+      return true;
    }
 
    /** 
