@@ -40,6 +40,10 @@ public class Coord2D
       }
    }
 
+   public ContinuousWorldPosition asContinuous() {
+      return new ContinuousWorldPosition(x, y, 0);
+   }
+
    @Override
    public String toString() {
       return "Coord (" + x + ", " + y + ")";

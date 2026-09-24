@@ -1,7 +1,9 @@
 package org.rezrov.roboworld;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * This class represents an environment in which a robot operates. This includes
@@ -30,11 +32,15 @@ public class Environment {
    private boolean[][] rightWalls;
    private boolean[][] bottomWalls;
 
+   private Map<Coord2D, Item> items = new HashMap<>();
+
+   private Map<Coord2D, Item> itemGoals = new HashMap<>();
+
    // Cell item contents (or NONE)
-   private Item[][] items;
+   // private Item[][] items;
 
    // Cell item goal (or NONE)
-   private Item[][] itemGoals;
+   // private Item[][] itemGoals;
 
    /**
     * Create an empty environment of the given size.
@@ -50,61 +56,70 @@ public class Environment {
       rightWalls = new boolean[width - 1][height];
       bottomWalls = new boolean[width][height - 1];
 
-      items = new Item[width][height];
-      itemGoals = new Item[width][height];
-      for (int x = 0; x < width; x++) {
-         for (int y = 0; y < height; y++) {
-            items[x][y] = itemGoals[x][y] = Item.NONE;
-         }
-      }
    }
 
    // Add an item goal location to
-   public void addItemGoalLocation(Item item, Coord2D location) {
-      if (itemGoals[location.x][location.y] != Item.NONE) {
+   public void addItemGoal(Coord2D location, Item item) {
+      if (itemGoals.putIfAbsent(location, item) != null) {
          // Since we should only be adding item goals at scenario setup, this is a hard
          // error.
-         throw new IllegalStateException("Attempt to put two item goals in the same location");
+         throw new AssertionError("Attempt to put two item goals in the same location");
       }
    }
 
-   public boolean addItemLocation(Item item, Coord2D location) {
-      if (items[location.x][location.y] != Item.NONE) {
-         // The robot can try to drop things in squares that already have a thing, and we
-         // want to crash the robot in that case, which is why this is a soft error.
-         return false;
+   // Attempt to put an item at the given location. If an item is already at that
+   // location, return false and leave the existing item unchanged. Otherwise,
+   // return
+   // true.
+   public boolean putItem(Coord2D location, Item item) {
+      return itemGoals.putIfAbsent(location, item) == null;
+   }
+
+   // Take the item at the given location and remove it from the environment.
+   // Returns NONE if there was no item at that location.
+   public Item takeItem(Coord2D location) {
+      Item ret = items.getOrDefault(location, Item.NONE);
+      if (ret != Item.NONE) {
+         items.remove(location);
       }
-      items[location.x][location.y] = item;
-      return true;
+      return ret;
    }
 
    public Item itemAt(Coord2D location) {
-      return items[location.x][location.y];
+      return items.getOrDefault(location, Item.NONE);
    }
 
-   // Returns true if all the items in the environment are
+   // Returns true iff all the items in the environment are at locations which
+   // are goals for that item.
    public boolean allItemsAtGoals() {
-      for (int x = 0; x < width; x++) {
-         for (int y = 0; y < height; y++) {
-            if (items[x][y] != Item.NONE &&
-                  items[x][y] != itemGoals[x][y]) {
-               return false;
-            }
+      // For each item, the corresponding itemGoal map should have an entry with
+      // the same item.
+      for (var entry : items.entrySet()) {
+         assert entry.getValue() != Item.NONE;
+         if (itemGoals.getOrDefault(entry.getKey(), Item.NONE) != entry.getValue()) {
+            return false;
          }
       }
       return true;
    }
 
+   // Returns true iff all the items goals contain corresponding items.
    public boolean allItemsGoalsHaveItems() {
-      for (int x = 0; x < width; x++) {
-         for (int y = 0; y < height; y++) {
-            if (itemGoals[x][y] != Item.NONE &&
-                  items[x][y] != itemGoals[x][y]) {
-               return false;
-            }
+      for (var entry : itemGoals.entrySet()) {
+         assert entry.getValue() != Item.NONE;
+         if (items.getOrDefault(entry.getKey(), Item.NONE) != entry.getValue()) {
+            return false;
          }
       }
       return true;
+   }
+
+   public Map<Coord2D, Item> items() {
+      return items;
+   }
+
+   public Map<Coord2D, Item> itemGoals() {
+      return itemGoals;
    }
 
    /** 

@@ -157,7 +157,11 @@ public class Scenario {
             "+ +-+ +\n" +
             "|     |\n" +
             "+-+-+-+\n");
+      e.addItemGoal(new Coord2D(0, 1), Item.BOUBA);
+      e.addItemGoal(new Coord2D(2, 2), Item.KIKI);
+
       Scenario ret = new Scenario(e, new DiscreteWorldPosition(2, 1, Direction.RIGHT));
+
       ret.addNoCrashGoal();
       ret.setGoalCells(Arrays.asList(new Coord2D(0, 0), new Coord2D(0, 1), new Coord2D(2, 1)));
       return ret;

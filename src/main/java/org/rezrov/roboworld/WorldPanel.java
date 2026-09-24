@@ -36,10 +36,6 @@ public class WorldPanel extends JPanel {
    // Robot sprite.
    private PositionedWorldDrawable robotSprite;
 
-   // private PositionedWorldDrawable robotSprite = new
-   // WorldStaticSprite(Resources.ROBOT_SPRITE,
-   // Resources.ROBOT_SPRITE_CELL_SCALE);
-
    // Color used to fill in bars at the edges when the aspect ratio isn't perfect.
    private Color letterboxColor;
 
@@ -194,6 +190,12 @@ public class WorldPanel extends JPanel {
       // For other rendering, the coordinate system has integer coordinates *centered*
       // in those cells.
       g.translate(.5f, .5f);
+
+      // Draw item goals onto the background.
+      for (var itemGoalEntry : env.itemGoals().entrySet()) {
+         Resources.drawImage(g, ItemResources.outlineDrawableFor(itemGoalEntry.getValue()), itemGoalEntry.getKey().asContinuous());
+      }
+
       cachedTransform = g.getTransform();
    }
 
