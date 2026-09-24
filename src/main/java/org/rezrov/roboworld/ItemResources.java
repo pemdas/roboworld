@@ -7,25 +7,23 @@ import java.awt.image.BufferedImage;
 public class ItemResources {
    static BufferedImage drawableFor(Item item) {
       switch (item) {
-         case NONE:
-            throw new Error("Can't create resources for none");
          case KIKI:
             return Resources.KIKI_SPRITE;
          case BOUBA:
             return Resources.BOUBA_SPRITE;
+         default:
+            throw new AssertionError("Bad item: " + item.name());
       }
-      throw new AssertionError("Unreachable code?");
    }
 
    static BufferedImage outlineDrawableFor(Item item) {
       switch (item) {
-         case NONE:
-            throw new Error("Can't get resources for none");
          case KIKI:
             return Resources.KIKI_OUTLINE_SPRITE;
          case BOUBA:
             return Resources.BOUBA_OUTLINE_SPRITE;
+         default:
+            throw new AssertionError("Bad item: " + item.name());
       }
-      throw new AssertionError("Unreachable code?");
    }
 }

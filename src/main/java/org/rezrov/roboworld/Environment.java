@@ -72,7 +72,7 @@ public class Environment {
    // return
    // true.
    public boolean putItem(Coord2D location, Item item) {
-      return itemGoals.putIfAbsent(location, item) == null;
+      return items.putIfAbsent(location, item) == null;
    }
 
    // Take the item at the given location and remove it from the environment.

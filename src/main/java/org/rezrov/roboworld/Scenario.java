@@ -160,6 +160,9 @@ public class Scenario {
       e.addItemGoal(new Coord2D(0, 1), Item.BOUBA);
       e.addItemGoal(new Coord2D(2, 2), Item.KIKI);
 
+      e.putItem(new Coord2D(1, 0), Item.BOUBA);
+      e.putItem(new Coord2D(0, 2), Item.KIKI);
+
       Scenario ret = new Scenario(e, new DiscreteWorldPosition(2, 1, Direction.RIGHT));
 
       ret.addNoCrashGoal();

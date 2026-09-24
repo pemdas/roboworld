@@ -95,11 +95,14 @@ public class WorldPanel extends JPanel {
       }
       g.drawRenderedImage(cachedBackgroundImage, new AffineTransform());
       g.transform(cachedTransform);
-      synchronized (this) {
-         // Robot sprite is manipulated directly by the application thread, so must
-         // be protected by the lock for thread safety.
-         robotSprite.draw(g);
+
+      // Draw items.
+      for (var itemEntry : env.items().entrySet()) {
+         Resources.drawImage(g, ItemResources.drawableFor(itemEntry.getValue()), itemEntry.getKey().asContinuous());
       }
+
+      robotSprite.draw(g);
+
       g.setTransform(savedTransform);
    }
 
@@ -191,9 +194,10 @@ public class WorldPanel extends JPanel {
       // in those cells.
       g.translate(.5f, .5f);
 
-      // Draw item goals onto the background.
+      // Draw item goals.
       for (var itemGoalEntry : env.itemGoals().entrySet()) {
-         Resources.drawImage(g, ItemResources.outlineDrawableFor(itemGoalEntry.getValue()), itemGoalEntry.getKey().asContinuous());
+         Resources.drawImage(g, ItemResources.outlineDrawableFor(itemGoalEntry.getValue()),
+               itemGoalEntry.getKey().asContinuous());
       }
 
       cachedTransform = g.getTransform();
