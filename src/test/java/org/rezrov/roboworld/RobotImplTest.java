@@ -22,21 +22,21 @@ public class RobotImplTest {
       }
    }
 
-   private World world;
-
-   public RobotImplTest() {
-      world = new World("" +
+   // All tests in here use this maze.
+   private RobotImpl createRobot(DiscreteWorldPosition startingPosition) {
+      RobotImpl r = new World("" +
             "+-+-+\n" +
             "| | |\n" +
             "+ + +\n" +
             "|   |\n" +
-            "+-+-+\n");
+            "+-+-+\n", startingPosition).robot();
+      r.setDisplayTarget(new FakeRobotDisplayTarget());
+      return r;
    }
 
    @Test
    public void turnLeft() {
-      RobotImpl r = new RobotImpl(world, new DiscreteWorldPosition(0, 1, Direction.RIGHT),
-            new FakeRobotDisplayTarget());
+      RobotImpl r = createRobot(new DiscreteWorldPosition(0, 1, Direction.RIGHT));
       assertEquals(r.position(), new DiscreteWorldPosition(0, 1, Direction.RIGHT));
       r.turnLeft();
       assertEquals(r.position(), new DiscreteWorldPosition(0, 1, Direction.UP));
@@ -50,7 +50,7 @@ public class RobotImplTest {
 
    @Test
    public void turnRight() {
-      RobotImpl r = new RobotImpl(world, new DiscreteWorldPosition(1, 0, Direction.DOWN), new FakeRobotDisplayTarget());
+      RobotImpl r = createRobot(new DiscreteWorldPosition(1, 0, Direction.DOWN));
       assertEquals(r.position(), new DiscreteWorldPosition(1, 0, Direction.DOWN));
       r.turnRight();
       assertEquals(r.position(), new DiscreteWorldPosition(1, 0, Direction.LEFT));
@@ -72,9 +72,7 @@ public class RobotImplTest {
       // |       |
       // +---+---+
       // @formatter:on
-
-      RobotImpl r = new RobotImpl(world, new DiscreteWorldPosition(0, 0, Direction.RIGHT),
-            new FakeRobotDisplayTarget());
+      RobotImpl r = createRobot(new DiscreteWorldPosition(0, 0, Direction.RIGHT));
       assertEquals(new DiscreteWorldPosition(0, 0, Direction.RIGHT), r.position());
       r.turnLeft();
       assertEquals(new DiscreteWorldPosition(0, 0, Direction.UP), r.position());
@@ -99,8 +97,8 @@ public class RobotImplTest {
 
    @Test
    public void crash() {
-      RobotImpl r = new RobotImpl(world, new DiscreteWorldPosition(0, 0, Direction.RIGHT),
-            new FakeRobotDisplayTarget());
+      RobotImpl r = createRobot(new DiscreteWorldPosition(0, 0, Direction.RIGHT));
+
       assertFalse(r.crashed());
       r.moveForward();
       assertTrue(r.crashed());

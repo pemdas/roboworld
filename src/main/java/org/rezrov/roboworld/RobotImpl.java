@@ -2,6 +2,12 @@ package org.rezrov.roboworld;
 
 import java.util.HashSet;
 
+/**
+ * The robot implementation is a bit unintuitive, in that
+ * it doesn't keep its own state -- that functionality is
+ * delegated to the World, to keep all the information
+ * required to render the world in one place.
+ */
 public class RobotImpl implements Robot {
    private World env;
    private RobotDisplayTarget displayTarget = null;
@@ -67,8 +73,9 @@ public class RobotImpl implements Robot {
 
    /** Turn left 90 degrees. If the robot has crashed, this doesn't do anything. */
    public void turnLeft() {
-      if (crashed())
+      if (crashed()) {
          return;
+      }
       // Use position accessor to access under lock
       moveCommon(position().left(), TURN_TIME);
       synchronized (this) {
@@ -84,8 +91,9 @@ public class RobotImpl implements Robot {
    /** Turn right 90 degrees */
    public void turnRight() {
       // Use position accessor to access under lock
-      if (crashed())
+      if (crashed()) {
          return;
+      }
       moveCommon(position().right(), TURN_TIME);
       synchronized (this) {
          if (turnRightCallSites.add(Thread.currentThread().getStackTrace()[2])) {

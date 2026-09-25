@@ -47,13 +47,12 @@ public class WorldPanel extends JPanel {
    private TimeSource worldTimeSource;
 
    public WorldPanel(World env, Color letterboxColor,
-         TimeSource worldTimeSource,
-         DiscreteWorldPosition startingRobotPosition) {
+         TimeSource worldTimeSource) {
       this.env = env;
       this.letterboxColor = letterboxColor;
       this.worldTimeSource = worldTimeSource;
       robotSprite = new WorldStaticSprite(Resources.ROBOT_SPRITE);
-      robotSprite.setPosition(startingRobotPosition.asContinuous());
+      robotSprite.setPosition(env.robot().position().asContinuous());
    }
 
    @Override
@@ -109,7 +108,7 @@ public class WorldPanel extends JPanel {
       robotSprite.draw(g);
       if (robotCarriedItem != Item.NONE) {
          var pos = robotSprite.getPosition();
-         pos.setHeading(pos.heading() + robotCarriedHeadingOffset);
+         pos = pos.setHeading(pos.heading() + robotCarriedHeadingOffset);
          Resources.drawImage(g, robotCarriedItem.image(), pos,
                0.5);
       }

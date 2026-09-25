@@ -39,7 +39,9 @@ public class InterpolatingWorldPositionSource implements WorldPositionSource {
    @Override
    public ContinuousWorldPosition getPosition() {
       double p = (timeSource.now() - startTime) / (endTime - startTime);
-      if (p >= 1.0) {
+      if (p <= 0.0) {
+         return startPosition;
+      } else if (p >= 1.0) {
          return endPosition;
       }
       switch (strategy) {

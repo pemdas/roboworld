@@ -11,7 +11,7 @@ public class WorldStaticSprite extends PositionedWorldDrawable {
    private BufferedImage image;
 
    public WorldStaticSprite(BufferedImage image) {
-      this(image, new StaticWorldPositionSource(new ContinuousWorldPosition()));
+      this(image, new StaticWorldPositionSource(new ContinuousWorldPosition(0, 0, 0)));
    }
 
    public WorldStaticSprite(BufferedImage image, WorldPositionSource positionSource) {

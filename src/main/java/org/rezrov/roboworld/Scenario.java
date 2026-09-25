@@ -84,21 +84,19 @@ public class Scenario {
    // Should have clean separation between scenario elements and practical objects
    // needed to run.
    private World world;
-   private RobotImpl robot;
    private RobotDisplayTarget window;
 
    // A description of the scenario, presented to the student.
    // private String description;
 
    public Scenario(String walls, DiscreteWorldPosition robotStartPosition, Options options) {
-      this.world = new World(walls, options);
-      this.robot = new RobotImpl(world, robotStartPosition);
+      this.world = new World(walls, robotStartPosition, options);
       goals = new ArrayList<>();
 
       // Always have a "don't crash" goal.
       goals.add(new Goal("No crashes") {
          public boolean goalSatisfied() {
-            return !robot.crashed();
+            return !world.robot().crashed();
          }
       });
 
@@ -114,7 +112,7 @@ public class Scenario {
          goals.add(new Goal("Robot in " + ((robotGoalPositions.size() > 1) ? "any " : "") + "goal cell") {
             @Override
             public boolean goalSatisfied() {
-               return world.map().robotGoalPositions().contains(robot.position().asCoord2D());
+               return world.robotInGoal();
             }
          });
       }
@@ -145,7 +143,7 @@ public class Scenario {
             public boolean goalSatisfied() {
                // Be careful not to mark success if the robot is carrying
                // an item of this type.
-               return robot.carriedItem() != entry.getKey() && world.allItemsAtGoals(entry.getKey());
+               return world.allItemsAtGoals(entry.getKey());
             }
          });
       }
@@ -175,10 +173,6 @@ public class Scenario {
       }
    }
 
-   public RobotImpl robot() {
-      return robot;
-   }
-
    public void createWindow() {
       String display = System.getProperty("roboworld.display", "gui");
       if (display.equals("gui")) {
@@ -199,7 +193,7 @@ public class Scenario {
             window.setRobotDone();
          }
       }).start();
-      robot.setDisplayTarget(window);
+      world.robot().setDisplayTarget(window);
    }
 
    public List<Goal> goals() {
@@ -216,7 +210,7 @@ public class Scenario {
             throw new NoSuchElementException("Unknown scenario id: " + scenarioId);
       }
       s.createWindow();
-      return s.robot;
+      return s.world.robot();
    }
 
    static final public int TEST1 = 0;
@@ -228,7 +222,7 @@ public class Scenario {
             "|     |\n" +
             "+ + + +\n" +
             "|     |\n" +
-            "+ + + +\n" +
+            "+ + +-+\n" +
             "| | | |\n" +
             "+ +-+ +\n" +
             "|     |\n" +

@@ -22,20 +22,16 @@ public class ContinuousWorldPosition {
       return heading;
    }
 
-   public void setX(double x) {
-      this.x = x;
+   public ContinuousWorldPosition setX(double newX) {
+      return new ContinuousWorldPosition(newX, y, heading);
    }
 
-   public void setY(double y) {
-      this.y = y;
+   public ContinuousWorldPosition setY(double newY) {
+      return new ContinuousWorldPosition(x, newY, heading);
    }
 
-   public void setHeading(double heading) {
-      this.heading = normalizedHeading(heading);
-   }
-
-   // Default constructor.
-   public ContinuousWorldPosition() {
+   public ContinuousWorldPosition setHeading(double newHeading) {
+      return new ContinuousWorldPosition(x, y, newHeading);
    }
 
    public ContinuousWorldPosition(double x, double y, double heading) {
@@ -45,10 +41,6 @@ public class ContinuousWorldPosition {
    }
 
    public ContinuousWorldPosition(ContinuousWorldPosition other) {
-      copyFrom(other);
-   }
-
-   public void copyFrom(ContinuousWorldPosition other) {
       x = other.x;
       y = other.y;
       heading = other.heading;
@@ -81,7 +73,7 @@ public class ContinuousWorldPosition {
    @Override
    public boolean equals(Object other) {
       if (!(other instanceof ContinuousWorldPosition)) {
-         throw new Error("What are you comparing?");
+         return false;
       }
       ContinuousWorldPosition op = (ContinuousWorldPosition) other;
       return x == op.x && y == op.y && heading == op.heading;

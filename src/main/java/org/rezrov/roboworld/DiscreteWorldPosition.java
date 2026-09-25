@@ -3,6 +3,8 @@ package org.rezrov.roboworld;
 /**
  * Position of something in the world in discrete space (e.g. exactly in one
  * cell, facing precisely N, S, E, or W).
+ * 
+ * Immutable.
  */
 public class DiscreteWorldPosition {
    private final int x;

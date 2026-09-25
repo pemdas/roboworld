@@ -13,16 +13,24 @@ import java.util.Map;
  * must be synchronized for thread-safety.
  */
 public class World {
+
    private WorldMap map;
+   private RobotImpl robot;
    private Map<Coord2D, Item> items;
 
-   public World(String walls) throws WorldMap.MapParseException {
-      this(walls, new Scenario.Options());
+   public World(String walls, DiscreteWorldPosition robotStartingPosition) throws WorldMap.MapParseException {
+      this(walls, robotStartingPosition, new Scenario.Options());
    }
 
-   public World(String walls, Scenario.Options options) throws WorldMap.MapParseException {
+   public World(String walls, DiscreteWorldPosition robotStartingPosition, Scenario.Options options)
+         throws WorldMap.MapParseException {
       map = new WorldMap(walls, options);
       items = new HashMap<>(options.items);
+      robot = new RobotImpl(this, robotStartingPosition);
+   }
+
+   public RobotImpl robot() {
+      return robot;
    }
 
    // Attempt to put an item at the given location. If an item is already at that
@@ -50,6 +58,12 @@ public class World {
    // Returns true iff all the items of this type in the environment are at
    // locations which are goals for that item type.
    synchronized public boolean allItemsAtGoals(Item itemType) {
+
+      if (robot.carriedItem() == itemType) {
+         // If the robot is carrying one, that one is definitely not in a goal.
+         return false;
+      }
+
       // For each item, the corresponding itemGoal map should have an entry with
       // the same item.
       for (var entry : items.entrySet()) {
@@ -68,6 +82,10 @@ public class World {
    // return the items themselves, we have to return a copy.
    synchronized public Collection<Map.Entry<Coord2D, Item>> items() {
       return new ArrayList<Map.Entry<Coord2D, Item>>(items.entrySet());
+   }
+
+   synchronized public boolean robotInGoal() {
+      return map().robotGoalPositions().contains(robot.position().asCoord2D());
    }
 
    public WorldMap map() {
