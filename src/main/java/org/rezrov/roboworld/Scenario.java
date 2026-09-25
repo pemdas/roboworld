@@ -116,7 +116,9 @@ public class Scenario {
          }
          goals.add(new Goal(goalDesc) {
             public boolean goalSatisfied() {
-               return robot.itemInHand() != entry.getKey() && env.allItemsAtGoals(entry.getKey());
+               // Be careful not to mark success if the robot is carrying
+               // an item of this type.
+               return robot.carriedItem() != entry.getKey() && env.allItemsAtGoals(entry.getKey());
             }
          });
       }

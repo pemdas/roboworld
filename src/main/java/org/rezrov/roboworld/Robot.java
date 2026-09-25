@@ -30,7 +30,7 @@ public interface Robot {
     * robot
     * is not currently carrying anything
     */
-   public Item itemInHand();
+   public Item carriedItem();
 
    /**
     * Returns the kind of item on the ground at the current robot location, or

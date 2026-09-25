@@ -135,7 +135,7 @@ public class RobotImpl implements Robot {
       return isCrashed;
    }
 
-   public synchronized Item itemInHand() {
+   public synchronized Item carriedItem() {
       return itemInHand;
    }
 

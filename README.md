@@ -6,11 +6,20 @@ RoboWorld is a tool intended for use in introductory programming courses taught 
 It's inspired by [Karel the Robot](https://compedu.stanford.edu/karel-reader/docs/python/en/chapter1.html) and related packages, particularly the Java adaptation by [Byron Weber Becker](https://uwaterloo.ca/computer-science/contacts/byron-weber-becker).
 
 ## Project Goals
-1. **Minimal setup:** this package is intended for use by students that are just beginning their computer science journey, and many student won't have significant computer expertise yet.  Using the library should involve nothing more than adding the jar file to the classpath, and the boilerplate needed to initialize and start a scenario should be as minimal as possible.  This means sometimes we do complicated things with threading deep in the library to preseve the simplicity of the student experience.
+1. **Minimal environment setup:** this package is intended for use by students that are just beginning their computer science journey, and many student won't have significant computer expertise yet.  Getting the environment set up should involve nothing more than adding the jar file to the classpath, and the boilerplate needed to initialize and start a scenario should be as minimal as possible.  This means sometimes we do complicated things with threading deep in the library to preseve the simplicity of the student experience.
 
-2. **Maximum platform compatibility:** the same setup flow should work on Linux, Windows, and MacOS.  The library should also work with older versions of Java, since many schools don't update their JRE's often.
+1. **Minimal student boilerplate:** Students should be able to start working on a with just a line or two of boilerplate in their `main` method.  Furthermore, the boilerplate should not
+be "weird"--it should look reasonable comprehensible to a student with minimal experience.
 
-3. **Scenario flexibility:** The library should allow for a wide variety of programming-related challenges to be expressed.
+1. **Simple student-facing API:** students interact with the `Robot` interface for challenges--this API should be minimal, well-documented, and straightfoward.  THe goal of this package is not to gice 
+
+1. **Maximum platform compatibility:** the same setup flow should work on Linux, Windows, and MacOS.  The library should also work with older versions of Java, since many schools don't update their JRE's often.  Right now the package targets version 11.  If there are compelling reasons to move the required JRE version forward, we will do so, but we want to be mindful that, especially at smaller programs, sometimes the installed version on school computers can be very old.
+
+1. **Scenario flexibility:** The library should allow for a wide variety of programming-related challenges to be expressed.
+
+## Non-Goals
+
+1.  The focus here is on basic imperative programming skills, emphasizing program flow.  The focus is *not* OOP skills (inheritance, encapsulation, interfaces, generic programming, etc).  
 
 ## Contributing
 
