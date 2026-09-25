@@ -22,7 +22,6 @@ public class RobotImpl implements Robot {
    public RobotImpl(World env, DiscreteWorldPosition position) {
       this.env = env;
       this.position = new DiscreteWorldPosition(position);
-      assert env.isInBounds(position.x(), position.y());
    }
 
    /**
@@ -123,7 +122,7 @@ public class RobotImpl implements Robot {
     * @return true if the way is blocked, false otherwise.
     */
    public boolean blocked() {
-      return env.isFacingWall(position());
+      return env.map().isFacingWall(position());
    }
 
    /**

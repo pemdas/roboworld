@@ -1,9 +1,6 @@
 package org.rezrov.roboworld;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.TreeMap;
@@ -28,9 +25,65 @@ public class Scenario {
    // A description of the scenario, presented to the student.
    // private String description;
 
-   public Scenario(World world, DiscreteWorldPosition robotStartPosition) {
-      this.world = world;
+   public Scenario(World worldInit, DiscreteWorldPosition robotStartPosition) {
+      this.world = worldInit;
       this.robot = new RobotImpl(world, robotStartPosition);
+      goals = new ArrayList<>();
+
+      // Always have a "don't crash" goal.
+      goals.add(new Goal("No crashes") {
+         public boolean goalSatisfied() {
+            return !robot.crashed();
+         }
+      });
+
+      maybeAddRobotPositionGoal();
+      maybeAddItemPositionGoals();
+   }
+
+   // If goal positions for the robot exist, add a Goal for that.
+   private void maybeAddRobotPositionGoal() {
+      // If there are goal positions for the robot, that's a goal.
+      var robotGoalPositions = world.map().robotGoalPositions();
+      if (!robotGoalPositions.isEmpty()) {
+         goals.add(new Goal("Robot in " + ((robotGoalPositions.size() > 1) ? "any " : "") + "goal cell") {
+            @Override
+            public boolean goalSatisfied() {
+               return world.map().robotGoalPositions().contains(robot.position().asCoord2D());
+            }
+         });
+      }
+   }
+
+   private static String capitalized(String s) {
+      assert !s.isEmpty();
+      return s.substring(0, 1).toUpperCase() + s.substring(1);
+   }
+
+   // For each item type in the world, add a goal that the items must be in the
+   // item goal positions.
+   void maybeAddItemPositionGoals() {
+      // Determine which items exist.
+      TreeMap<Item, Integer> itemCount = new TreeMap<Item, Integer>();
+      for (Item item : world.items().values()) {
+         itemCount.put(item, itemCount.getOrDefault(item, 0) + 1);
+      }
+
+      for (var entry : itemCount.entrySet()) {
+         String goalDesc;
+         if (entry.getValue() > 1) {
+            goalDesc = "All " + entry.getKey().pluralName() + " placed";
+         } else {
+            goalDesc = capitalized(entry.getKey().singularName()) + " placed";
+         }
+         goals.add(new Goal(goalDesc) {
+            public boolean goalSatisfied() {
+               // Be careful not to mark success if the robot is carrying
+               // an item of this type.
+               return robot.carriedItem() != entry.getKey() && world.allItemsAtGoals(entry.getKey());
+            }
+         });
+      }
    }
 
    // This is a little specialized thread that just exists to wait until
@@ -84,60 +137,6 @@ public class Scenario {
       robot.setDisplayTarget(window);
    }
 
-   // The set of all ending positions for the robot which are considered "correct".
-   // If empty, any ending position is considered correct.
-   HashSet<Coord2D> goalPositions = new HashSet<>();
-
-   // Add a goal that the robot must not crash.
-   void addNoCrashGoal() {
-      goals.add(new Goal("No crashes") {
-         public boolean goalSatisfied() {
-            return !robot.crashed();
-         }
-      });
-   }
-
-   // Add a goal that all items are in item goal spots.
-   // This is separated out into a goal for each type of item that exists in the
-   // world.
-   void addItemsGoals() {
-      // Determine which items exist.
-      TreeMap<Item, Integer> itemCount = new TreeMap<Item, Integer>();
-      for (Item item : world.items().values()) {
-         itemCount.put(item, itemCount.getOrDefault(item, 0) + 1);
-      }
-
-      for (var entry : itemCount.entrySet()) {
-         String goalDesc;
-         if (entry.getValue() > 1) {
-            goalDesc = "All " + entry.getKey() + "s placed";
-         } else {
-            goalDesc = entry.getKey() + " placed";
-         }
-         goals.add(new Goal(goalDesc) {
-            public boolean goalSatisfied() {
-               // Be careful not to mark success if the robot is carrying
-               // an item of this type.
-               return robot.carriedItem() != entry.getKey() && world.allItemsAtGoals(entry.getKey());
-            }
-         });
-      }
-   }
-
-   // Add a goal position for the robot. If the robot ends in any goal position, it
-   // has met the goal. If no goal poses are added, then the robot can end in any
-   // position.
-   public void setGoalCells(Collection<Coord2D> cells) {
-      assert !cells.isEmpty();
-      world.setGoalCells(cells);
-      goals.add(new Goal("Robot in " + ((cells.size() > 1) ? "any " : "") + "goal cell") {
-         @Override
-         public boolean goalSatisfied() {
-            return world.isGoalCell(robot.position().asCoord2D());
-         }
-      });
-   }
-
    public List<Goal> goals() {
       return goals;
    }
@@ -157,7 +156,14 @@ public class Scenario {
 
    static final public int TEST1 = 0;
 
-   private static Scenario test1Scene() throws World.MapParseException {
+   private static Scenario test1Scene() throws WorldMap.MapParseException {
+      World.Config c = new World.Config()
+            .addItemGoalPosition(Item.STAR, new Coord2D(0, 1))
+            .addItemGoalPosition(Item.MOON, new Coord2D(2, 2))
+            .addItem(Item.STAR, new Coord2D(1, 0))
+            .addItem(Item.MOON, new Coord2D(0, 2))
+            .addRobotGoalPositions(List.of(new Coord2D(0, 0), new Coord2D(0, 1), new Coord2D(2, 1)));
+
       World e = new World("" +
             "+-+-+-+\n" +
             "|     |\n" +
@@ -167,17 +173,9 @@ public class Scenario {
             "| | | |\n" +
             "+ +-+ +\n" +
             "|     |\n" +
-            "+-+-+-+\n");
-      e.addItemGoal(new Coord2D(0, 1), Item.STAR);
-      e.addItemGoal(new Coord2D(2, 2), Item.MOON);
-
-      e.putItem(new Coord2D(1, 0), Item.STAR);
-      e.putItem(new Coord2D(0, 2), Item.MOON);
+            "+-+-+-+\n", c);
 
       Scenario ret = new Scenario(e, new DiscreteWorldPosition(2, 1, Direction.RIGHT));
-      ret.addItemsGoals();
-      ret.addNoCrashGoal();
-      ret.setGoalCells(Arrays.asList(new Coord2D(0, 0), new Coord2D(0, 1), new Coord2D(2, 1)));
       return ret;
    }
 

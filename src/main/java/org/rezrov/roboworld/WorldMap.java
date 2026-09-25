@@ -1,6 +1,5 @@
 package org.rezrov.roboworld;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,59 +63,14 @@ public class WorldMap {
       }
    }
 
-   // Helper class for construction configuration
-   //
-   // This
-   public static class Config {
-      private Map<Coord2D, Item> itemGoalPositions = new HashMap<>();
-      private Set<Coord2D> robotGoalPositions = new HashSet<>();
-
-      Config addItemGoalPosition(Item item, Coord2D position) {
-         Item existing = itemGoalPositions.putIfAbsent(position, item);
-         if (!(existing == null || existing == item)) {
-            throw new AssertionError("Multiple item goals at square " + position);
-         }
-         return this;
-      }
-
-      Config addItemGoalPositions(Item item, Collection<Coord2D> positions) {
-         for (Coord2D c : positions) {
-            addItemGoalPosition(item, c);
-         }
-         return this;
-      }
-
-      Config addItemGoalPositions(Item item, Coord2D[] positions) {
-         for (Coord2D c : positions) {
-            addItemGoalPosition(item, c);
-         }
-         return this;
-      }
-
-      Config addRobotGoalPosition(Coord2D position) {
-         robotGoalPositions.add(position);
-         return this;
-      }
-
-      Config addRobotGoalPositions(Collection<Coord2D> positions) {
-         robotGoalPositions.addAll(positions);
-         return this;
-      }
-
-      Config addRobotGoalPositions(Coord2D[] positions) {
-         Collections.addAll(robotGoalPositions, positions);
-         return this;
-      }
-
-   }
-
    public WorldMap(String walls) throws MapParseException {
-      this(walls, new Config());
+      this(walls, new HashMap<Coord2D, Item>(), new HashSet<Coord2D>());
    }
 
-   public WorldMap(String walls, Config config) throws MapParseException {
-      this.itemGoalPositions = Collections.unmodifiableMap(new HashMap<Coord2D, Item>(config.itemGoalPositions));
-      this.robotGoalPositions = Collections.unmodifiableSet(new HashSet<Coord2D>(config.robotGoalPositions));
+   public WorldMap(String walls, Map<Coord2D, Item> itemGoalPositions, Set<Coord2D> robotGoalPositions)
+         throws MapParseException {
+      this.itemGoalPositions = Collections.unmodifiableMap(new HashMap<Coord2D, Item>(itemGoalPositions));
+      this.robotGoalPositions = Collections.unmodifiableSet(new HashSet<Coord2D>(robotGoalPositions));
 
       String[] lines = walls.trim().split("\\s*\n\\s*");
       validateAsciiArtMap(lines);

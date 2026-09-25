@@ -119,8 +119,8 @@ public class WorldPanel extends JPanel {
 
    // Return the pixel dimensions we'll use to render the env.
    private Dimension worldSizePx() {
-      float worldRenderWidth = env.getWidth() + WALL_WIDTH;
-      float worldRenderHeight = env.getHeight() + WALL_WIDTH;
+      float worldRenderWidth = env.map().width() + WALL_WIDTH;
+      float worldRenderHeight = env.map().height() + WALL_WIDTH;
       float worldRenderAspectRatio = worldRenderWidth / worldRenderHeight;
       float panelAspectRatio = getWidth() / (float) getHeight();
       Dimension ret = new Dimension();
@@ -152,8 +152,8 @@ public class WorldPanel extends JPanel {
       // not be precisely the same in the
       // horizontal and vertical directions, but it should be close enough that any
       // distortion is unnoticeable.
-      float hCellSize = (float) (wPx / (env.getWidth() + WALL_WIDTH));
-      float vCellSize = (float) (hPx / (env.getHeight() + WALL_WIDTH));
+      float hCellSize = (float) (wPx / (env.map().width() + WALL_WIDTH));
+      float vCellSize = (float) (hPx / (env.map().height() + WALL_WIDTH));
 
       g.scale(hCellSize, vCellSize);
 
@@ -161,7 +161,7 @@ public class WorldPanel extends JPanel {
       int checkers = 6;
       float ic = 1.0f / checkers;
       g.setColor(Color.LIGHT_GRAY);
-      for (Coord2D c : env.goalCells()) {
+      for (Coord2D c : env.map().robotGoalPositions()) {
          for (int x = 0; x < checkers; x++) {
             for (int y = (x % 2 == 0) ? 0 : 1; y < checkers; y += 2) {
                g.fill(new Rectangle2D.Float(c.x + x * ic, c.y + y * ic, ic, ic));
@@ -174,30 +174,30 @@ public class WorldPanel extends JPanel {
       g.setColor(WALL_COLOR);
       g.setStroke(new BasicStroke(WALL_WIDTH));
       // Draw the outer walls.
-      g.draw(new Line2D.Float(0, 0, env.getWidth(), 0)); // Top
-      g.draw(new Line2D.Float(0, env.getHeight(), env.getWidth(), env.getHeight())); // Bottom
-      g.draw(new Line2D.Float(0, 0, 0, env.getHeight())); // Left
-      g.draw(new Line2D.Float(env.getWidth(), 0, env.getWidth(), env.getHeight())); // Right
+      g.draw(new Line2D.Float(0, 0, env.map().width(), 0)); // Top
+      g.draw(new Line2D.Float(0, env.map().height(), env.map().width(), env.map().height())); // Bottom
+      g.draw(new Line2D.Float(0, 0, 0, env.map().height())); // Left
+      g.draw(new Line2D.Float(env.map().width(), 0, env.map().width(), env.map().height())); // Right
 
       // Draw top walls
-      for (int x = 0; x < env.getWidth(); x++) {
-         for (int y = 1; y < env.getHeight(); y++) {
-            if (env.isFacingWall(new DiscreteWorldPosition(x, y, Direction.UP))) {
+      for (int x = 0; x < env.map().width(); x++) {
+         for (int y = 1; y < env.map().height(); y++) {
+            if (env.map().isFacingWall(new DiscreteWorldPosition(x, y, Direction.UP))) {
                g.draw(new Line2D.Float(x, y, x + 1, y));
             }
          }
       }
       // Draw left walls
-      for (int x = 1; x < env.getWidth(); x++) {
-         for (int y = 0; y < env.getHeight(); y++) {
-            if (env.isFacingWall(new DiscreteWorldPosition(x, y, Direction.LEFT))) {
+      for (int x = 1; x < env.map().width(); x++) {
+         for (int y = 0; y < env.map().height(); y++) {
+            if (env.map().isFacingWall(new DiscreteWorldPosition(x, y, Direction.LEFT))) {
                g.draw(new Line2D.Float(x, y, x, y + 1));
             }
          }
       }
       // Draw "pillars"
-      for (int x = 1; x < env.getWidth(); x++) {
-         for (int y = 1; y < env.getHeight(); y++) {
+      for (int x = 1; x < env.map().width(); x++) {
+         for (int y = 1; y < env.map().height(); y++) {
             g.fill(new Ellipse2D.Float(x - WALL_WIDTH, y - WALL_WIDTH, 2 * WALL_WIDTH, 2 * WALL_WIDTH));
          }
       }
@@ -206,7 +206,7 @@ public class WorldPanel extends JPanel {
       g.translate(.5f, .5f);
 
       // Draw item goals.
-      for (var itemGoalEntry : env.itemGoals().entrySet()) {
+      for (var itemGoalEntry : env.map().itemGoalPositions().entrySet()) {
          Resources.drawImage(g, itemGoalEntry.getValue().goalImage(),
                itemGoalEntry.getKey().asContinuous());
       }

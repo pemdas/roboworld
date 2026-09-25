@@ -25,8 +25,12 @@ public class RobotImplTest {
    private World world;
 
    public RobotImplTest() {
-      world = new World(2, 2);
-      world.addWall(new DiscreteWorldPosition(0, 0, Direction.RIGHT));
+      world = new World("" +
+            "+-+-+\n" +
+            "| | |\n" +
+            "+ + +\n" +
+            "|   |\n" +
+            "+-+-+\n");
    }
 
    @Test
