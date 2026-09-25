@@ -5,19 +5,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-public class WorldTest {
+public class WorldMapTest {
 
    @Test
    public void testImplicitWalls() {
       // Create an empty world, check that the exterior walls exist.
-      // @formatter:off
-      // +---+---+
-      // |       |
-      // +   +   +
-      // |       |
-      // +---+---+
-      // @formatter:on
-      World w = new World(2, 2);
+      WorldMap w = new WorldMap("" +
+            "+-+-+\n" +
+            "|   |\n" +
+            "+ + +\n" +
+            "|   |\n" +
+            "+-+-+\n");
       assertTrue(w.isFacingWall(new DiscreteWorldPosition(0, 0, Direction.UP)));
       assertTrue(w.isFacingWall(new DiscreteWorldPosition(0, 0, Direction.LEFT)));
       assertFalse(w.isFacingWall(new DiscreteWorldPosition(0, 0, Direction.DOWN)));
@@ -41,6 +39,7 @@ public class WorldTest {
 
    @Test
    public void testVerticalWalls() {
+      // Create a world with some vertical interior walls, check that they exist.
       // @formatter:off
       // +---+---+
       // |       |
@@ -50,10 +49,14 @@ public class WorldTest {
       // |   |   |
       // +---+---+
       // @formatter:on
-      World w = new World(2, 3);
-      w.addWall(new DiscreteWorldPosition(0, 1, Direction.RIGHT));
-      w.addWall(new DiscreteWorldPosition(1, 2, Direction.LEFT));
-      w.addWall(new DiscreteWorldPosition(1, 1, Direction.LEFT)); // nop, wall exists
+      WorldMap w = new WorldMap("" +
+            "+-+-+\n" +
+            "|   |\n" +
+            "+ + +\n" +
+            "| | |\n" +
+            "+ + +\n" +
+            "| | |\n" +
+            "+-+-+\n");
       assertFalse(w.isFacingWall(new DiscreteWorldPosition(0, 0, Direction.RIGHT)));
       assertFalse(w.isFacingWall(new DiscreteWorldPosition(1, 0, Direction.LEFT)));
       assertTrue(w.isFacingWall(new DiscreteWorldPosition(0, 1, Direction.RIGHT)));
@@ -64,17 +67,13 @@ public class WorldTest {
 
    @Test
    public void testHorzontalWalls() {
-      // @formatter:off
-      // +---+---+---+
-      // |           |
-      // +---+   +---+
-      // |           |
-      // +---+---+---+
-      // @formatter:on
-      World w = new World(3, 2);
-      w.addWall(new DiscreteWorldPosition(0, 1, Direction.UP));
-      w.addWall(new DiscreteWorldPosition(0, 0, Direction.DOWN)); // nop, wall exists
-      w.addWall(new DiscreteWorldPosition(2, 0, Direction.DOWN));
+      // Create a world with some horizontal interior walls, check that they exist.
+      WorldMap w = new WorldMap("" +
+            "+-+-+-+\n" +
+            "|     |\n" +
+            "+-+ +-+\n" +
+            "|     |\n" +
+            "+-+-+-+\n");
       assertTrue(w.isFacingWall(new DiscreteWorldPosition(0, 0, Direction.DOWN)));
       assertFalse(w.isFacingWall(new DiscreteWorldPosition(1, 0, Direction.DOWN)));
       assertTrue(w.isFacingWall(new DiscreteWorldPosition(2, 0, Direction.DOWN)));
