@@ -3,49 +3,64 @@ package org.rezrov.roboworld;
 import java.awt.image.BufferedImage;
 
 public enum Item {
-   NONE,
-   STAR {
-      @Override
-      public BufferedImage image() {
-         return STAR_SPRITE;
-      }
+   NONE("none", "none", null, null, null),
+   STAR("star", "stars", Resources.loadImage("star_item.png"),
+         Resources.loadImage("star_item_outline.png"), '*'),
+   MOON("moon", "moons", Resources.loadImage("moon_item.png"),
+         Resources.loadImage("moon_item_outline.png"), '@');
 
-      @Override
-      public BufferedImage outlineImage() {
-         return STAR_OUTLINE_SPRITE;
-      }
-   },
-   MOON {
-      @Override
-      public BufferedImage image() {
-         return MOON_SPRITE;
-      }
+   final private String singularName;
+   final private String pluralName;
+   final private BufferedImage image;
+   final private BufferedImage goalImage;
+   final private Character letter;
 
-      @Override
-      public BufferedImage outlineImage() {
-         return MOON_OUTLINE_SPRITE;
+   private Item(String singularName, String pluralName, BufferedImage image, BufferedImage goalImage,
+         Character letter) {
+      this.singularName = singularName;
+      this.pluralName = pluralName;
+      this.image = image;
+      this.goalImage = goalImage;
+      this.letter = letter;
+   }
+
+   public static class NotFoundException extends Exception {
+      private NotFoundException(String msg) {
+         super(msg);
       }
-   };
+   }
 
-   final private static BufferedImage STAR_SPRITE = Resources.loadImage("star_item.png");
-   final private static BufferedImage STAR_OUTLINE_SPRITE = Resources.loadImage("star_item_outline.png");
-   final private static BufferedImage MOON_SPRITE = Resources.loadImage("moon_item.png");
-   final private static BufferedImage MOON_OUTLINE_SPRITE = Resources.loadImage("moon_item_outline.png");
+   public String singularName() {
+      return singularName;
+   }
 
-   // Make toString() return the name with just the first letter capitalized
-   // instead of shouting.
-   @Override
-   public String toString() {
-      String allCaps = super.toString();
-      return allCaps.charAt(0) + allCaps.substring(1).toLowerCase();
+   public String pluralName() {
+      return pluralName;
    }
 
    public BufferedImage image() {
-      throw new AssertionError("Undefined");
+      return image;
    }
 
-   public BufferedImage outlineImage() {
-      throw new AssertionError("Undefined");
+   public BufferedImage goalImage() {
+      return goalImage;
+   }
+
+   public Character letter() {
+      return letter;
+   }
+
+   static Item fromLetter(Character letter) throws NotFoundException {
+      // Unless we eventually add a ridiculous number of items, linear search here is
+      // fine
+
+      for (Item item : values()) {
+         if (item != NONE && item.letter.equals(letter)) {
+            return item;
+         }
+      }
+      throw new NotFoundException("No Item associated with letter '" + letter + "'");
+
    }
 
 }

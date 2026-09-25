@@ -207,7 +207,7 @@ public class WorldPanel extends JPanel {
 
       // Draw item goals.
       for (var itemGoalEntry : env.itemGoals().entrySet()) {
-         Resources.drawImage(g, itemGoalEntry.getValue().outlineImage(),
+         Resources.drawImage(g, itemGoalEntry.getValue().goalImage(),
                itemGoalEntry.getKey().asContinuous());
       }
 
