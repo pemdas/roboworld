@@ -54,8 +54,8 @@ public class ContinuousWorldPosition {
       heading = other.heading;
    }
 
-   /*
-    * Return (other.heading - heading) normalized to (-Math.PI, Math.PI]
+   /**
+    * Return (other.heading - heading) normalized to (-PI, Math.PI]
     */
    public double headingOffset(ContinuousWorldPosition other) {
       double ret = other.heading - heading;
@@ -67,6 +67,9 @@ public class ContinuousWorldPosition {
       return ret;
    }
 
+   /**
+    * Return the value of heading normalized to [0, 2 * PI)
+    */
    private static double normalizedHeading(double heading) {
       heading = heading % (2 * Math.PI);
       if (heading < 0) {

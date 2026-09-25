@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="500"
+   height="500"
+   viewBox="0 0 499.99999 500"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="moon_item.svg"
+   inkscape:export-filename="../../roboworld/src/main/resources/org/rezrov/roboworld/bouba_outline.png"
+   inkscape:export-xdpi="41.113277"
+   inkscape:export-ydpi="41.113277"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     showgrid="false"
+     inkscape:zoom="1.8369923"
+     inkscape:cx="56.886466"
+     inkscape:cy="234.35047"
+     inkscape:window-width="2494"
+     inkscape:window-height="1371"
+     inkscape:window-x="1986"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer2" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer1"
+     inkscape:label="Outline">
+    <path
+       id="ItemOutline"
+       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:4.774;stroke-opacity:1"
+       d="M 289.58465,53.85876 A 200.69296,200.69296 0 0 1 321.78387,162.79432 200.69296,200.69296 0 0 1 121.09051,363.48767 200.69296,200.69296 0 0 1 66.873713,355.86267 200.69296,200.69296 0 0 0 235.48309,447.7533 200.69296,200.69296 0 0 0 436.17645,247.05994 200.69296,200.69296 0 0 0 289.58465,53.85876 Z" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Layer 1"
+     style="display:inline">
+    <path
+       id="path4060"
+       style="fill:#f51a1a;fill-opacity:1;stroke:#000000;stroke-width:4.774;stroke-opacity:1"
+       d="M 289.58465,53.858764 A 200.69296,200.69296 0 0 1 321.78387,162.79432 200.69296,200.69296 0 0 1 121.09051,363.48767 200.69296,200.69296 0 0 1 66.873717,355.86267 200.69296,200.69296 0 0 0 235.48309,447.7533 200.69296,200.69296 0 0 0 436.17645,247.05994 200.69296,200.69296 0 0 0 289.58465,53.858764 Z" />
+  </g>
+</svg>

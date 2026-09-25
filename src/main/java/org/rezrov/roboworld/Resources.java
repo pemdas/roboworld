@@ -32,11 +32,6 @@ public class Resources {
    final public static Font MEDIUM_FONT = new Font(FONT_NAME, Font.PLAIN, 16);
    final public static Font SMALL_FONT = new Font(FONT_NAME, Font.PLAIN, 10);
 
-   final public static BufferedImage KIKI_SPRITE = loadImage("kiki_item.png");
-   final public static BufferedImage KIKI_OUTLINE_SPRITE = loadImage("kiki_item_outline.png");
-   final public static BufferedImage BOUBA_SPRITE = loadImage("bouba_item.png");
-   final public static BufferedImage BOUBA_OUTLINE_SPRITE = loadImage("bouba_item_outline.png");
-
    public static BufferedImage loadImage(String name) {
       try (InputStream in = Resources.class.getResourceAsStream(name)) {
          if (in == null)
@@ -59,15 +54,20 @@ public class Resources {
       }
    }
 
-   public static void drawImage(Graphics2D g, BufferedImage image, ContinuousWorldPosition position) {
+   public static void drawImage(Graphics2D g, BufferedImage image, ContinuousWorldPosition position,
+         double finalScale) {
       AffineTransform saved = g.getTransform();
-      double cellWidth = WORLD_SPRITE_CELL_SCALE * image.getWidth();
-      double cellHeight = WORLD_SPRITE_CELL_SCALE * image.getHeight();
+      double cellWidth = finalScale * WORLD_SPRITE_CELL_SCALE * image.getWidth();
+      double cellHeight = finalScale * WORLD_SPRITE_CELL_SCALE * image.getHeight();
       g.translate(position.x() - cellWidth / 2.0, position.y() - cellHeight / 2.0);
       g.rotate(position.heading(), cellWidth / 2.0, cellHeight / 2.0);
-      g.scale(WORLD_SPRITE_CELL_SCALE, WORLD_SPRITE_CELL_SCALE);
+      g.scale(finalScale * WORLD_SPRITE_CELL_SCALE, finalScale * WORLD_SPRITE_CELL_SCALE);
       g.drawRenderedImage(image, new AffineTransform());
       g.setTransform(saved);
+   }
+
+   public static void drawImage(Graphics2D g, BufferedImage image, ContinuousWorldPosition position) {
+      drawImage(g, image, position, 1.0);
    }
 
 }

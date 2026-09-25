@@ -36,6 +36,7 @@ public class WorldPanel extends JPanel {
    // Robot sprite.
    private PositionedWorldDrawable robotSprite;
    private Item robotCarriedItem = Item.NONE;
+   private double robotCarriedHeadingOffset = 0;
 
    // Color used to fill in bars at the edges when the aspect ratio isn't perfect.
    private Color letterboxColor;
@@ -64,6 +65,9 @@ public class WorldPanel extends JPanel {
          return;
       }
       Graphics2D g = (Graphics2D) gr;
+      g.setRenderingHints(new RenderingHints(
+            RenderingHints.KEY_ANTIALIASING,
+            RenderingHints.VALUE_ANTIALIAS_ON));
       AffineTransform savedTransform = g.getTransform();
       Dimension worldSizePx = worldSizePx();
       if (cachedBackgroundImage == null || worldSizePx.height != cachedBackgroundImage.getHeight()
@@ -99,12 +103,15 @@ public class WorldPanel extends JPanel {
 
       // Draw items.
       for (var itemEntry : env.items().entrySet()) {
-         Resources.drawImage(g, ItemResources.drawableFor(itemEntry.getValue()), itemEntry.getKey().asContinuous());
+         Resources.drawImage(g, itemEntry.getValue().image(), itemEntry.getKey().asContinuous());
       }
 
       robotSprite.draw(g);
       if (robotCarriedItem != Item.NONE) {
-         Resources.drawImage(g, ItemResources.drawableFor(robotCarriedItem), robotSprite.getPosition());
+         var pos = robotSprite.getPosition();
+         pos.setHeading(pos.heading() + robotCarriedHeadingOffset);
+         Resources.drawImage(g, robotCarriedItem.image(), pos,
+               0.5);
       }
 
       g.setTransform(savedTransform);
@@ -200,7 +207,7 @@ public class WorldPanel extends JPanel {
 
       // Draw item goals.
       for (var itemGoalEntry : env.itemGoals().entrySet()) {
-         Resources.drawImage(g, ItemResources.outlineDrawableFor(itemGoalEntry.getValue()),
+         Resources.drawImage(g, itemGoalEntry.getValue().outlineImage(),
                itemGoalEntry.getKey().asContinuous());
       }
 
@@ -209,6 +216,7 @@ public class WorldPanel extends JPanel {
 
    public void setRobotCarriedItem(Item item) {
       robotCarriedItem = item;
+      robotCarriedHeadingOffset = -robotSprite.getPosition().heading();
    }
 
    synchronized public void moveRobot(ContinuousWorldPosition from, ContinuousWorldPosition to, double movementTime) {

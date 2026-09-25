@@ -110,9 +110,9 @@ public class Scenario {
       for (var entry : itemCount.entrySet()) {
          String goalDesc;
          if (entry.getValue() > 1) {
-            goalDesc = "All " + entry.getKey() + "s in right places";
+            goalDesc = "All " + entry.getKey() + "s placed";
          } else {
-            goalDesc = entry.getKey() + " in right place";
+            goalDesc = entry.getKey() + " placed";
          }
          goals.add(new Goal(goalDesc) {
             public boolean goalSatisfied() {
@@ -166,11 +166,11 @@ public class Scenario {
             "+ +-+ +\n" +
             "|     |\n" +
             "+-+-+-+\n");
-      e.addItemGoal(new Coord2D(0, 1), Item.BOUBA);
-      e.addItemGoal(new Coord2D(2, 2), Item.KIKI);
+      e.addItemGoal(new Coord2D(0, 1), Item.STAR);
+      e.addItemGoal(new Coord2D(2, 2), Item.MOON);
 
-      e.putItem(new Coord2D(1, 0), Item.BOUBA);
-      e.putItem(new Coord2D(0, 2), Item.KIKI);
+      e.putItem(new Coord2D(1, 0), Item.STAR);
+      e.putItem(new Coord2D(0, 2), Item.MOON);
 
       Scenario ret = new Scenario(e, new DiscreteWorldPosition(2, 1, Direction.RIGHT));
       ret.addItemsGoals();
