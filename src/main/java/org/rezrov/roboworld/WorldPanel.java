@@ -42,11 +42,11 @@ public class WorldPanel extends JPanel {
    private Color letterboxColor;
 
    // Environment and robot we're rendering
-   private Environment env;
+   private World env;
 
    private TimeSource worldTimeSource;
 
-   public WorldPanel(Environment env, Color letterboxColor,
+   public WorldPanel(World env, Color letterboxColor,
          TimeSource worldTimeSource,
          DiscreteWorldPosition startingRobotPosition) {
       this.env = env;

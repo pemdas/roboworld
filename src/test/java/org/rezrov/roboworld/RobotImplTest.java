@@ -22,16 +22,17 @@ public class RobotImplTest {
       }
    }
 
-   private Environment env;
+   private World world;
 
    public RobotImplTest() {
-      env = new Environment(2, 2);
-      env.addWall(new DiscreteWorldPosition(0, 0, Direction.RIGHT));
+      world = new World(2, 2);
+      world.addWall(new DiscreteWorldPosition(0, 0, Direction.RIGHT));
    }
 
    @Test
    public void turnLeft() {
-      RobotImpl r = new RobotImpl(env, new DiscreteWorldPosition(0, 1, Direction.RIGHT), new FakeRobotDisplayTarget());
+      RobotImpl r = new RobotImpl(world, new DiscreteWorldPosition(0, 1, Direction.RIGHT),
+            new FakeRobotDisplayTarget());
       assertEquals(r.position(), new DiscreteWorldPosition(0, 1, Direction.RIGHT));
       r.turnLeft();
       assertEquals(r.position(), new DiscreteWorldPosition(0, 1, Direction.UP));
@@ -45,7 +46,7 @@ public class RobotImplTest {
 
    @Test
    public void turnRight() {
-      RobotImpl r = new RobotImpl(env, new DiscreteWorldPosition(1, 0, Direction.DOWN), new FakeRobotDisplayTarget());
+      RobotImpl r = new RobotImpl(world, new DiscreteWorldPosition(1, 0, Direction.DOWN), new FakeRobotDisplayTarget());
       assertEquals(r.position(), new DiscreteWorldPosition(1, 0, Direction.DOWN));
       r.turnRight();
       assertEquals(r.position(), new DiscreteWorldPosition(1, 0, Direction.LEFT));
@@ -68,7 +69,8 @@ public class RobotImplTest {
       // +---+---+
       // @formatter:on
 
-      RobotImpl r = new RobotImpl(env, new DiscreteWorldPosition(0, 0, Direction.RIGHT), new FakeRobotDisplayTarget());
+      RobotImpl r = new RobotImpl(world, new DiscreteWorldPosition(0, 0, Direction.RIGHT),
+            new FakeRobotDisplayTarget());
       assertEquals(new DiscreteWorldPosition(0, 0, Direction.RIGHT), r.position());
       r.turnLeft();
       assertEquals(new DiscreteWorldPosition(0, 0, Direction.UP), r.position());
@@ -93,7 +95,8 @@ public class RobotImplTest {
 
    @Test
    public void crash() {
-      RobotImpl r = new RobotImpl(env, new DiscreteWorldPosition(0, 0, Direction.RIGHT), new FakeRobotDisplayTarget());
+      RobotImpl r = new RobotImpl(world, new DiscreteWorldPosition(0, 0, Direction.RIGHT),
+            new FakeRobotDisplayTarget());
       assertFalse(r.crashed());
       r.moveForward();
       assertTrue(r.crashed());

@@ -231,7 +231,7 @@ public class RobotWindow extends JFrame
       this.scenario = scenario;
       setMinimumSize(new Dimension(600, 400));
       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      worldPanel = new WorldPanel(scenario.environment(), Color.CYAN, TimeSource.worldTimeSource(),
+      worldPanel = new WorldPanel(scenario.world(), Color.CYAN, TimeSource.worldTimeSource(),
             scenario.robot().position());
       getContentPane().add(worldPanel, BorderLayout.CENTER);
       getContentPane().add(createBottomPanel(), BorderLayout.PAGE_END);

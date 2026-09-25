@@ -3,7 +3,7 @@ package org.rezrov.roboworld;
 import java.util.HashSet;
 
 public class RobotImpl implements Robot {
-   private Environment env;
+   private World env;
    private RobotDisplayTarget displayTarget = null;
 
    // Access to these fields may happen from multipke threads, and so
@@ -19,7 +19,7 @@ public class RobotImpl implements Robot {
    private static double TURN_TIME = 0.6;
    private static double MOVE_TIME = 1.0;
 
-   public RobotImpl(Environment env, DiscreteWorldPosition position) {
+   public RobotImpl(World env, DiscreteWorldPosition position) {
       this.env = env;
       this.position = new DiscreteWorldPosition(position);
       assert env.isInBounds(position.x(), position.y());
@@ -28,7 +28,7 @@ public class RobotImpl implements Robot {
    /**
     * Convenience constructor for testing.
     */
-   public RobotImpl(Environment env, DiscreteWorldPosition position, RobotDisplayTarget displayTarget) {
+   public RobotImpl(World env, DiscreteWorldPosition position, RobotDisplayTarget displayTarget) {
       this(env, position);
       setDisplayTarget(displayTarget);
    }

@@ -7,10 +7,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * This class represents the state of the world. environment in which a robot operates. This includes
+ * This class represents the state of the world. environment in which a robot
+ * operates. This includes
  * the walls and any other items the robot may interact with.
  */
-public class Environment {
+public class World {
 
    // Dimensions of the map. Valid robot x positions are from 0...width-1 and
    // y positions are from 0...height - 1. The map is always rectangular (though
@@ -45,7 +46,7 @@ public class Environment {
    /**
     * Create an empty environment of the given size.
     */
-   public Environment(int width, int height) {
+   public World(int width, int height) {
       assert width > 0;
       assert height > 0;
       this.width = width;
@@ -139,7 +140,7 @@ public class Environment {
       }
    }
 
-   public Environment(String asciiArt) throws MapParseException {
+   public World(String asciiArt) throws MapParseException {
       // Regular expressions used to validate the map.
 
       String input = asciiArt.trim();

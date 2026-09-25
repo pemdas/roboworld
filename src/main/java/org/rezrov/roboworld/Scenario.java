@@ -21,16 +21,16 @@ public class Scenario {
    // TODO - The scenario creation process is a mess. Clean it up.
    // Should have clean separation between scenario elements and practical objects
    // needed to run.
-   private Environment env;
+   private World world;
    private RobotImpl robot;
    private RobotDisplayTarget window;
 
    // A description of the scenario, presented to the student.
    // private String description;
 
-   public Scenario(Environment env, DiscreteWorldPosition robotStartPosition) {
-      this.env = env;
-      this.robot = new RobotImpl(env, robotStartPosition);
+   public Scenario(World world, DiscreteWorldPosition robotStartPosition) {
+      this.world = world;
+      this.robot = new RobotImpl(world, robotStartPosition);
    }
 
    // This is a little specialized thread that just exists to wait until
@@ -103,7 +103,7 @@ public class Scenario {
    void addItemsGoals() {
       // Determine which items exist.
       TreeMap<Item, Integer> itemCount = new TreeMap<Item, Integer>();
-      for (Item item : env.items().values()) {
+      for (Item item : world.items().values()) {
          itemCount.put(item, itemCount.getOrDefault(item, 0) + 1);
       }
 
@@ -118,7 +118,7 @@ public class Scenario {
             public boolean goalSatisfied() {
                // Be careful not to mark success if the robot is carrying
                // an item of this type.
-               return robot.carriedItem() != entry.getKey() && env.allItemsAtGoals(entry.getKey());
+               return robot.carriedItem() != entry.getKey() && world.allItemsAtGoals(entry.getKey());
             }
          });
       }
@@ -129,11 +129,11 @@ public class Scenario {
    // position.
    public void setGoalCells(Collection<Coord2D> cells) {
       assert !cells.isEmpty();
-      env.setGoalCells(cells);
+      world.setGoalCells(cells);
       goals.add(new Goal("Robot in " + ((cells.size() > 1) ? "any " : "") + "goal cell") {
          @Override
          public boolean goalSatisfied() {
-            return env.isGoalCell(robot.position().asCoord2D());
+            return world.isGoalCell(robot.position().asCoord2D());
          }
       });
    }
@@ -157,8 +157,8 @@ public class Scenario {
 
    static final public int TEST1 = 0;
 
-   private static Scenario test1Scene() throws Environment.MapParseException {
-      Environment e = new Environment("" +
+   private static Scenario test1Scene() throws World.MapParseException {
+      World e = new World("" +
             "+-+-+-+\n" +
             "|     |\n" +
             "+ + + +\n" +
@@ -181,7 +181,7 @@ public class Scenario {
       return ret;
    }
 
-   public Environment environment() {
-      return env;
+   public World world() {
+      return world;
    }
 }
