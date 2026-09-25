@@ -7,6 +7,7 @@
 * [git](https://git-scm.com/)
 
 If you want to alter or add art assets, the process of converting SVGs to PNGs additionally requires
+
 * [inkscape](www.inkscape.org)
 * [make](https://www.gnu.org/software/make/)
 
@@ -35,5 +36,6 @@ mvn test
 ```
 
 ## Running the example scenario
+
 
 TODO

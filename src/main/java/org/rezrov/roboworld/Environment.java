@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * This class represents an environment in which a robot operates. This includes
+ * This class represents the state of the world. environment in which a robot operates. This includes
  * the walls and any other items the robot may interact with.
  */
 public class Environment {

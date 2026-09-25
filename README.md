@@ -21,6 +21,12 @@ be "weird"--it should look reasonable comprehensible to a student with minimal e
 
 1.  The focus here is on basic imperative programming skills, emphasizing program flow.  The focus is *not* OOP skills (inheritance, encapsulation, interfaces, generic programming, etc).  
 
+## Documentation Links
+
+* [Building from Scratch](docs/BUILDING.md)
+* [Threading Model](docs/THREADING.md)
+
+
 ## Contributing
 
 Pull requests are welcome.  As with any open source project, you're strongly encouraged to discuss features and ideas before generating pull requests; the right way to do that here is via the GitHub issue tracker.  There is not at present an official Discord or similar.  You're also welcome to email me at [foozle+roboworld@gmail.com](mailto:foozle+roboworld@gmail.com)
