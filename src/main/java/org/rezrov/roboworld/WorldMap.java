@@ -15,7 +15,6 @@ import java.util.Set;
  * not need to be synchronized.
  */
 public class WorldMap {
-
    // Every map implicitly has walls all round the outside edges (e.g. every
    // cell with x=0 implicitly has a wall to the left)
    //
@@ -64,13 +63,13 @@ public class WorldMap {
    }
 
    public WorldMap(String walls) throws MapParseException {
-      this(walls, new HashMap<Coord2D, Item>(), new HashSet<Coord2D>());
+      this(walls, new Scenario.Options());
    }
 
-   public WorldMap(String walls, Map<Coord2D, Item> itemGoalPositions, Set<Coord2D> robotGoalPositions)
+   public WorldMap(String walls, Scenario.Options options)
          throws MapParseException {
-      this.itemGoalPositions = Collections.unmodifiableMap(new HashMap<Coord2D, Item>(itemGoalPositions));
-      this.robotGoalPositions = Collections.unmodifiableSet(new HashSet<Coord2D>(robotGoalPositions));
+      this.itemGoalPositions = Collections.unmodifiableMap(new HashMap<Coord2D, Item>(options.itemGoalPositions));
+      this.robotGoalPositions = Collections.unmodifiableSet(new HashSet<Coord2D>(options.robotGoalPositions));
 
       String[] lines = walls.trim().split("\\s*\n\\s*");
       validateAsciiArtMap(lines);

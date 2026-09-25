@@ -102,7 +102,7 @@ public class WorldPanel extends JPanel {
       g.transform(cachedTransform);
 
       // Draw items.
-      for (var itemEntry : env.items().entrySet()) {
+      for (var itemEntry : env.items()) {
          Resources.drawImage(g, itemEntry.getValue().image(), itemEntry.getKey().asContinuous());
       }
 

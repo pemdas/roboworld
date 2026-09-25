@@ -1,8 +1,15 @@
 package org.rezrov.roboworld;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.TreeMap;
 
 import javax.swing.SwingUtilities;
@@ -12,10 +19,68 @@ import javax.swing.SwingUtilities;
 //
 // It's also the entry point for users to create a scenario and play it. 
 public class Scenario {
+   // Helper class for specifying optional scenario additions.
+   public static class Options {
+      public Map<Coord2D, Item> itemGoalPositions = new HashMap<>();
+      public Set<Coord2D> robotGoalPositions = new HashSet<>();
+      public Map<Coord2D, Item> items = new HashMap<>();
+
+      Options addItemGoalPosition(Item item, Coord2D position) {
+         Item existing = itemGoalPositions.putIfAbsent(position, item);
+         if (!(existing == null || existing == item)) {
+            throw new AssertionError("Multiple item goals at square " + position);
+         }
+         return this;
+      }
+
+      Options addItemGoalPositions(Item item, Collection<Coord2D> positions) {
+         for (Coord2D c : positions) {
+            addItemGoalPosition(item, c);
+         }
+         return this;
+      }
+
+      Options addItemGoalPositions(Item item, Coord2D[] positions) {
+         return addItemGoalPositions(item, Arrays.asList(positions));
+      }
+
+      Options addItem(Item item, Coord2D position) {
+         Item existing = items.putIfAbsent(position, item);
+         if (!(existing == null || existing == item)) {
+            throw new AssertionError("Multiple items at square " + position);
+         }
+         return this;
+      }
+
+      Options addItems(Item item, Collection<Coord2D> positions) {
+         for (Coord2D c : positions) {
+            addItem(item, c);
+         }
+         return this;
+      }
+
+      Options addItems(Item item, Coord2D[] positions) {
+         return addItems(item, Arrays.asList(positions));
+      }
+
+      Options addRobotGoalPosition(Coord2D position) {
+         robotGoalPositions.add(position);
+         return this;
+      }
+
+      Options addRobotGoalPositions(Collection<Coord2D> positions) {
+         robotGoalPositions.addAll(positions);
+         return this;
+      }
+
+      Options addRobotGoalPositions(Coord2D[] positions) {
+         Collections.addAll(robotGoalPositions, positions);
+         return this;
+      }
+   }
 
    ArrayList<Goal> goals = new ArrayList<>();
 
-   // TODO - The scenario creation process is a mess. Clean it up.
    // Should have clean separation between scenario elements and practical objects
    // needed to run.
    private World world;
@@ -25,8 +90,8 @@ public class Scenario {
    // A description of the scenario, presented to the student.
    // private String description;
 
-   public Scenario(World worldInit, DiscreteWorldPosition robotStartPosition) {
-      this.world = worldInit;
+   public Scenario(String walls, DiscreteWorldPosition robotStartPosition, Options options) {
+      this.world = new World(walls, options);
       this.robot = new RobotImpl(world, robotStartPosition);
       goals = new ArrayList<>();
 
@@ -38,7 +103,7 @@ public class Scenario {
       });
 
       maybeAddRobotPositionGoal();
-      maybeAddItemPositionGoals();
+      maybeAddItemPositionGoals(options);
    }
 
    // If goal positions for the robot exist, add a Goal for that.
@@ -62,10 +127,10 @@ public class Scenario {
 
    // For each item type in the world, add a goal that the items must be in the
    // item goal positions.
-   void maybeAddItemPositionGoals() {
+   void maybeAddItemPositionGoals(Options options) {
       // Determine which items exist.
       TreeMap<Item, Integer> itemCount = new TreeMap<Item, Integer>();
-      for (Item item : world.items().values()) {
+      for (Item item : options.items.values()) {
          itemCount.put(item, itemCount.getOrDefault(item, 0) + 1);
       }
 
@@ -157,14 +222,8 @@ public class Scenario {
    static final public int TEST1 = 0;
 
    private static Scenario test1Scene() throws WorldMap.MapParseException {
-      World.Config c = new World.Config()
-            .addItemGoalPosition(Item.STAR, new Coord2D(0, 1))
-            .addItemGoalPosition(Item.MOON, new Coord2D(2, 2))
-            .addItem(Item.STAR, new Coord2D(1, 0))
-            .addItem(Item.MOON, new Coord2D(0, 2))
-            .addRobotGoalPositions(List.of(new Coord2D(0, 0), new Coord2D(0, 1), new Coord2D(2, 1)));
 
-      World e = new World("" +
+      String map = "" +
             "+-+-+-+\n" +
             "|     |\n" +
             "+ + + +\n" +
@@ -173,10 +232,15 @@ public class Scenario {
             "| | | |\n" +
             "+ +-+ +\n" +
             "|     |\n" +
-            "+-+-+-+\n", c);
+            "+-+-+-+\n";
 
-      Scenario ret = new Scenario(e, new DiscreteWorldPosition(2, 1, Direction.RIGHT));
-      return ret;
+      return new Scenario(map, new DiscreteWorldPosition(2, 1, Direction.RIGHT),
+            new Options()
+                  .addItemGoalPosition(Item.STAR, new Coord2D(0, 1))
+                  .addItemGoalPosition(Item.MOON, new Coord2D(2, 2))
+                  .addItem(Item.STAR, new Coord2D(1, 0))
+                  .addItem(Item.MOON, new Coord2D(0, 2))
+                  .addRobotGoalPositions(List.of(new Coord2D(0, 0), new Coord2D(0, 1), new Coord2D(2, 1))));
    }
 
    public World world() {

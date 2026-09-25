@@ -1,12 +1,9 @@
 package org.rezrov.roboworld;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * This class represents the state of the world, both the static elements
@@ -16,77 +13,16 @@ import java.util.Set;
  * must be synchronized for thread-safety.
  */
 public class World {
-   // Helper class for optional construction configuration
-   public static class Config {
-      private Map<Coord2D, Item> itemGoalPositions = new HashMap<>();
-      private Set<Coord2D> robotGoalPositions = new HashSet<>();
-      private Map<Coord2D, Item> items = new HashMap<>();
-
-      Config addItemGoalPosition(Item item, Coord2D position) {
-         Item existing = itemGoalPositions.putIfAbsent(position, item);
-         if (!(existing == null || existing == item)) {
-            throw new AssertionError("Multiple item goals at square " + position);
-         }
-         return this;
-      }
-
-      Config addItemGoalPositions(Item item, Collection<Coord2D> positions) {
-         for (Coord2D c : positions) {
-            addItemGoalPosition(item, c);
-         }
-         return this;
-      }
-
-      Config addItemGoalPositions(Item item, Coord2D[] positions) {
-         return addItemGoalPositions(item, Arrays.asList(positions));
-      }
-
-      Config addItem(Item item, Coord2D position) {
-         Item existing = items.putIfAbsent(position, item);
-         if (!(existing == null || existing == item)) {
-            throw new AssertionError("Multiple items at square " + position);
-         }
-         return this;
-      }
-
-      Config addItems(Item item, Collection<Coord2D> positions) {
-         for (Coord2D c : positions) {
-            addItem(item, c);
-         }
-         return this;
-      }
-
-      Config addItems(Item item, Coord2D[] positions) {
-         return addItems(item, Arrays.asList(positions));
-      }
-
-      Config addRobotGoalPosition(Coord2D position) {
-         robotGoalPositions.add(position);
-         return this;
-      }
-
-      Config addRobotGoalPositions(Collection<Coord2D> positions) {
-         robotGoalPositions.addAll(positions);
-         return this;
-      }
-
-      Config addRobotGoalPositions(Coord2D[] positions) {
-         Collections.addAll(robotGoalPositions, positions);
-         return this;
-      }
-   }
-
    private WorldMap map;
    private Map<Coord2D, Item> items;
 
    public World(String walls) throws WorldMap.MapParseException {
-      this(walls, new Config());
+      this(walls, new Scenario.Options());
    }
 
-
-   public World(String walls, Config config) throws WorldMap.MapParseException {
-      map = new WorldMap(walls, config.itemGoalPositions, config.robotGoalPositions);
-      items = new HashMap<>(config.items);
+   public World(String walls, Scenario.Options options) throws WorldMap.MapParseException {
+      map = new WorldMap(walls, options);
+      items = new HashMap<>(options.items);
    }
 
    // Attempt to put an item at the given location. If an item is already at that
@@ -128,16 +64,14 @@ public class World {
       return true;
    }
 
-   public Map<Coord2D, Item> items() {
-      return items;
+   // This is awkward, but to keep things thread-safe, we can't just
+   // return the items themselves, we have to return a copy.
+   synchronized public Collection<Map.Entry<Coord2D, Item>> items() {
+      return new ArrayList<Map.Entry<Coord2D, Item>>(items.entrySet());
    }
 
    public WorldMap map() {
       return map;
    }
-
-   // public Map<Coord2D, Item> itemGoals() {
-   // return itemGoals;
-   // }
 
 }
