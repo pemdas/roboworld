@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 public class RobotImplTest {
    static class FakeRobotDisplayTarget
          implements RobotDisplayTarget {
-      public void updateRobotStats(RobotStats stats) {
+      public void robotStatsChanged() {
       }
 
       public void moveRobot(ContinuousWorldPosition start, ContinuousWorldPosition end, double movementTime) {

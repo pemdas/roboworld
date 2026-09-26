@@ -5,4 +5,8 @@ package org.rezrov.roboworld;
  */
 public interface WorldPositionSource {
    ContinuousWorldPosition getPosition();
+
+   // Returns true if the position is moving. False if the position
+   // is not moving (and will not move again in the future.
+   boolean moving();
 }

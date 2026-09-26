@@ -5,20 +5,11 @@ package org.rezrov.roboworld;
  * time.
  */
 public class InterpolatingWorldPositionSource implements WorldPositionSource {
-
-   // For now we just do linear interpolation, but we may want to add other
-   // strategies like easing in, etc. May also want to add support for looping
-   // and doing out-and-back interpolation.
-   public enum Strategy {
-      LINEAR,
-      SINE
-   };
-
    private ContinuousWorldPosition startPosition;
    private ContinuousWorldPosition endPosition;
 
    // Local time for the interpolation.
-   private Strategy strategy;
+   private InterpolationStrategy strategy;
    private TimeSource timeSource;
    private double startTime;
    private double endTime;
@@ -26,7 +17,7 @@ public class InterpolatingWorldPositionSource implements WorldPositionSource {
    public InterpolatingWorldPositionSource(ContinuousWorldPosition startPosition, ContinuousWorldPosition endPosition,
          double startTime, double endTime,
          TimeSource timeSource,
-         Strategy strategy) {
+         InterpolationStrategy strategy) {
       assert endTime > startTime;
       this.startPosition = new ContinuousWorldPosition(startPosition);
       this.endPosition = new ContinuousWorldPosition(endPosition);
@@ -55,5 +46,10 @@ public class InterpolatingWorldPositionSource implements WorldPositionSource {
       return new ContinuousWorldPosition(startPosition.x() + p * (endPosition.x() - startPosition.x()),
             startPosition.y() + p * (endPosition.y() - startPosition.y()),
             startPosition.heading() + p * startPosition.headingOffset(endPosition));
+   }
+
+   @Override
+   public boolean moving() {
+      return timeSource.now() < endTime;
    }
 }

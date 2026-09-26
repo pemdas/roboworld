@@ -24,8 +24,8 @@ public class ConsoleRobotDisplayTarget implements RobotDisplayTarget {
       }
    }
 
-   public void updateRobotStats(RobotStats stats) {
-      // this.stats = stats;
+   public void robotStatsChanged() {
+      // Nothing to do.
    }
 
    public void setRobotDone() {

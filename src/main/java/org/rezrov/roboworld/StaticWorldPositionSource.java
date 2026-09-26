@@ -15,4 +15,9 @@ public class StaticWorldPositionSource implements WorldPositionSource {
       return position;
    }
 
+   @Override
+   public boolean moving() {
+      return false;
+   }
+
 }

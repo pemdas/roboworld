@@ -3,6 +3,8 @@ package org.rezrov.roboworld;
 import java.util.Collections;
 import java.util.LinkedList;
 
+import javax.swing.SwingUtilities;
+
 /**
  * This class takes care of distributing a consistent wall and world time
  * to anyone that wants it.
@@ -11,7 +13,8 @@ import java.util.LinkedList;
  * To give a consistent view of the world, both time sources are updated
  * once per frame.
  * 
- * This class is thread safe.
+ * This class is thread safe (under the precondition that advance() is only
+ * ever called from the event dispatch thread)
  */
 public class TimeSource {
    static private TimeSource wallTimeSource = new TimeSource();
@@ -27,18 +30,20 @@ public class TimeSource {
 
    /**
     * Schedule something to be run when the time according to this TimeSource is at
-    * least t. If t is in the past, the runnable will be run the next time the
-    * time source advances.
-    * 
-    * Tasks are run on the thread that calls advace() (and so should be short
-    * latency)
+    * least t. When the the timesource passes t, the runnable will be put on
+    * the event dispatch queue. If t is in the past, the runnable will immediately
+    * be put on the event dispatch queue.
     */
    synchronized public void runAt(double t, Runnable runnable) {
-      scheduledTasks.add(new ScheduledTask(t, runnable));
-      // Since we don't expect there to be many scheduled tasks, just sort every
-      // time. If we end up in a situation where we do have a lot of tasks
-      // flying around, revisit this and set up a TreeMap.
-      Collections.sort(scheduledTasks, (a, b) -> Double.compare(a.t, b.t));
+      if (t <= now) {
+         SwingUtilities.invokeLater(runnable);
+      } else {
+         scheduledTasks.add(new ScheduledTask(t, runnable));
+         // Since we don't expect there to be many scheduled tasks, just sort every
+         // time. If we end up in a situation where we do have a lot of tasks
+         // flying around, revisit this and set up a TreeMap.
+         Collections.sort(scheduledTasks, (a, b) -> Double.compare(a.t, b.t));
+      }
    }
 
    static private class ScheduledTask {
@@ -55,18 +60,32 @@ public class TimeSource {
 
    private double now = 0.0;
 
-   synchronized void advance(double dt) {
-      now += dt;
+   /**
+    * Advance the time by dt. Put any scheduled tasks for which the time has now
+    * passed into the event queue.
+    *
+    * Restricted to the event dispatch thread.
+    */
+   public void advance(double dt) {
+      assert SwingUtilities.isEventDispatchThread();
+      synchronized (this) {
+         now += dt;
+      }
       var i = scheduledTasks.iterator();
       while (i.hasNext()) {
          ScheduledTask task = i.next();
          if (task.t <= now) {
-            task.runnable.run();
+            // Using invokeLater() here instead of run() is important; if any of
+            // the runnables were to advance the time while we hadn't yet
+            // finished this method, we could end up doing really nasty things
+            // with scheduled tasks.
+            SwingUtilities.invokeLater(task.runnable);
             i.remove();
          } else {
             break;
          }
       }
+
    }
 
    synchronized public double now() {

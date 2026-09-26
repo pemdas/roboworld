@@ -44,15 +44,11 @@ public class WorldPanel extends JPanel {
    // Environment and robot we're rendering
    private World env;
 
-   private TimeSource worldTimeSource;
-
-   public WorldPanel(World env, Color letterboxColor,
-         TimeSource worldTimeSource) {
+   public WorldPanel(World env, Color letterboxColor, WorldPositionSource robotPositionSource) {
       this.env = env;
       this.letterboxColor = letterboxColor;
-      this.worldTimeSource = worldTimeSource;
       robotSprite = new WorldStaticSprite(Resources.ROBOT_SPRITE);
-      robotSprite.setPosition(env.robot().position().asContinuous());
+      robotSprite.setPositionSource(robotPositionSource);
    }
 
    @Override
@@ -106,6 +102,7 @@ public class WorldPanel extends JPanel {
       }
 
       robotSprite.draw(g);
+
       if (robotCarriedItem != Item.NONE) {
          var pos = robotSprite.getPosition();
          pos = pos.setHeading(pos.heading() + robotCarriedHeadingOffset);
@@ -218,33 +215,8 @@ public class WorldPanel extends JPanel {
       robotCarriedHeadingOffset = -robotSprite.getPosition().heading();
    }
 
-   synchronized public void moveRobot(ContinuousWorldPosition from, ContinuousWorldPosition to, double movementTime) {
-      if (movementTime <= 0) {
-         // Instantaneous move.
-         robotSprite.setPositionSource(new StaticWorldPositionSource(to));
-      } else {
-         // Move where the thread should block while the animation completes.
-         double now = worldTimeSource.now();
-         double moveEndTime = now + movementTime;
-         robotSprite
-               .setPositionSource(
-                     new InterpolatingWorldPositionSource(from, to, now, moveEndTime, worldTimeSource,
-                           InterpolatingWorldPositionSource.Strategy.SINE));
-         // Put the application thread to sleep until the move is finished.
-         worldTimeSource.runAt(moveEndTime, new Runnable() {
-            @Override
-            public void run() {
-               synchronized (WorldPanel.this) {
-                  WorldPanel.this.notify();
-               }
-            }
-         });
-         while (worldTimeSource.now() < moveEndTime) {
-            try {
-               wait();
-            } catch (InterruptedException e) {
-            }
-         }
-      }
+   public void setRobotPositionSource(WorldPositionSource source) {
+      robotSprite.setPositionSource(source);
    }
+
 }

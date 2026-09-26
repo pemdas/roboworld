@@ -10,6 +10,7 @@ import java.awt.GridBagLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Hashtable;
 
 import javax.swing.BorderFactory;
@@ -59,22 +60,16 @@ public class RobotWindow extends JFrame
 
    // Status elements, used to report how many times the robot has done
    // each thing it does.
-   private JTextField movesStatus = new JTextField();
-   private JTextField leftTurnsStatus = new JTextField();
-   private JTextField rightTurnsStatus = new JTextField();
-   private JTextField moveCallSitesStatus = new JTextField();
-   private JTextField leftTurnCallSitesStatus = new JTextField();
-   private JTextField rightTurnCallSitesStatus = new JTextField();
+   private JTextField[] statsFields;
 
    // Has the main thread exited (and thus we won't see any more commands from a
    // Robot)?
    private boolean robotDone = false;
+   private WorldPositionSource robotSpritePositionSource;
 
    private Scenario scenario;
 
    GoalStatus[] goalStatuses;
-
-   RobotStats robotStats = new RobotStats();
 
    // Timer used to run the update loop.
    private javax.swing.Timer timer;
@@ -124,40 +119,36 @@ public class RobotWindow extends JFrame
       statusPanel.setBorder(statusBorder);
       statusPanel.setLayout(new GridBagLayout());
 
-      String[] statusLabels = { "Moves:", "Left Turns:", "Right Turns:", "Move Callsites:", "Left Turn Callsites:",
-            "Right Turn Callsites:" };
-
-      JTextField[] statusFields = { movesStatus, leftTurnsStatus, rightTurnsStatus, moveCallSitesStatus,
-            leftTurnCallSitesStatus, rightTurnCallSitesStatus
-      };
-      assert statusLabels.length == statusFields.length;
+      statsFields = new JTextField[RobotStats.numStats()];
       var c = new GridBagConstraints();
       c.insets.top = 5;
       c.insets.bottom = 0;
-      for (int i = 0; i < statusLabels.length; i++) {
+      c.gridy = 0;
+      for (int i = 0; i < RobotStats.numStats(); i++) {
+         RobotStats.Id statId = RobotStats.Id.values()[i];
          c.gridx = 0;
          c.gridy = i;
          c.insets.left = 10;
          c.insets.right = 5;
-         if (i == statusLabels.length - 1) {
+         if (i == statsFields.length - 1) {
             // Last row gets padding on bottom to match top of table padding.
             c.insets.bottom = 10;
          }
          c.fill = GridBagConstraints.HORIZONTAL;
-         var l = makeLabel(statusLabels[i], Resources.MEDIUM_FONT);
+         var l = makeLabel(statId.toString() + ":", Resources.MEDIUM_FONT);
          l.setHorizontalAlignment(SwingConstants.RIGHT);
          statusPanel.add(l, c);
          c.gridx = 1;
          c.insets.left = 0;
          c.insets.right = 10;
          c.fill = GridBagConstraints.NONE;
-         statusFields[i].setText("0");
-         // statusFields[i].setFont(Resources.MEDIUM_FONT);
-         statusFields[i].setHorizontalAlignment(SwingConstants.CENTER);
-         statusFields[i].setEditable(false);
-         statusFields[i].setBackground(Color.WHITE);
-         statusFields[i].setPreferredSize(new Dimension(50, 25));
-         statusPanel.add(statusFields[i], c);
+         statsFields[i] = new JTextField("0");
+         statsFields[i].setFont(Resources.MEDIUM_FONT);
+         statsFields[i].setHorizontalAlignment(SwingConstants.CENTER);
+         statsFields[i].setEditable(false);
+         statsFields[i].setBackground(Color.WHITE);
+         statsFields[i].setPreferredSize(new Dimension(50, 25));
+         statusPanel.add(statsFields[i], c);
          c.insets.top = 3; // For all rows after the first.
       }
 
@@ -231,7 +222,9 @@ public class RobotWindow extends JFrame
       this.scenario = scenario;
       setMinimumSize(new Dimension(600, 400));
       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      worldPanel = new WorldPanel(scenario.world(), Color.CYAN, TimeSource.worldTimeSource());
+      robotSpritePositionSource = new StaticWorldPositionSource(scenario.world().robot().position().asContinuous());
+      worldPanel = new WorldPanel(scenario.world(), Color.CYAN,
+            robotSpritePositionSource);
       getContentPane().add(worldPanel, BorderLayout.CENTER);
       getContentPane().add(createBottomPanel(), BorderLayout.PAGE_END);
       getContentPane().add(createRightPanel(), BorderLayout.LINE_END);
@@ -264,6 +257,7 @@ public class RobotWindow extends JFrame
          updateGoalsStatus();
       } else if (running) {
          TimeSource.worldTimeSource().advance(worldSpeedMultiplier * dt);
+         maybeUnblockApplicationThread();
          updateGoalsStatus();
       }
       worldPanel.paintImmediately(0, 0, worldPanel.getWidth(), worldPanel.getHeight());
@@ -278,24 +272,51 @@ public class RobotWindow extends JFrame
       }
    }
 
+   private boolean applicationThreadCanProceed() {
+      return running && !robotSpritePositionSource.moving();
+   }
+
+   synchronized private void maybeUnblockApplicationThread() {
+      assert SwingUtilities.isEventDispatchThread();
+      if (applicationThreadCanProceed()) {
+         notify();
+      }
+   }
+
+   synchronized private void maybeBlockApplicationThread() {
+      assert !SwingUtilities.isEventDispatchThread();
+      try {
+         while (!applicationThreadCanProceed()) {
+            wait();
+         }
+      } catch (InterruptedException e) {
+         throw new RuntimeException(e);
+      }
+   }
+
    // Note this is called from the application thread, not the Swing thread.
    @Override
    public void moveRobot(ContinuousWorldPosition from, ContinuousWorldPosition to, double movementTime) {
-      synchronized (this) {
-         // Pause here if we're not running.
-         while (!running) {
-            try {
-               wait();
-            } catch (InterruptedException e) {
+      try {
+         // Set up the GUI animation machinery on the swing thread.
+         SwingUtilities.invokeAndWait(new Runnable() {
+            public void run() {
+               if (worldSpeedMultiplier == Integer.MAX_VALUE) {
+                  robotSpritePositionSource = new StaticWorldPositionSource(to);
+               } else {
+                  double now = TimeSource.worldTimeSource().now();
+                  robotSpritePositionSource = new InterpolatingWorldPositionSource(from, to, now, now + movementTime,
+                        TimeSource.worldTimeSource(), InterpolationStrategy.SINE);
+               }
+               worldPanel.setRobotPositionSource(robotSpritePositionSource);
             }
-         }
-         if (worldSpeedMultiplier == Integer.MAX_VALUE) {
-            movementTime = 0;
-         }
+         });
+      } catch (InterruptedException e) {
+         throw new RuntimeException(e);
+      } catch (InvocationTargetException e) {
+         throw new RuntimeException(e);
       }
-      // Don't hold the lock for this object while the robot moves.
-      assert !Thread.holdsLock(this);
-      worldPanel.moveRobot(from, to, movementTime);
+      maybeBlockApplicationThread();
    }
 
    @Override
@@ -309,16 +330,13 @@ public class RobotWindow extends JFrame
 
    // Note this is called from the application thread, not the Swing thread.
    @Override
-   public void updateRobotStats(RobotStats newStats) {
-      RobotStats copy = new RobotStats(newStats);
+   public void robotStatsChanged() {
       SwingUtilities.invokeLater(new Runnable() {
          public void run() {
-            leftTurnsStatus.setText("" + copy.numTurnsLeft);
-            rightTurnsStatus.setText("" + copy.numTurnsRight);
-            movesStatus.setText("" + copy.numMovesForward);
-            leftTurnCallSitesStatus.setText("" + copy.numTurnLeftCallSites);
-            rightTurnCallSitesStatus.setText("" + copy.numTurnRightCallSites);
-            moveCallSitesStatus.setText("" + copy.numMoveForwardCallSites);
+            RobotStats stats = scenario.world().robot().stats();
+            for (int i = 0; i < RobotStats.numStats(); i++) {
+               statsFields[i].setText("" + stats.get(i));
+            }
          }
       });
    }

@@ -9,6 +9,7 @@ import java.util.HashSet;
  * required to render the world in one place.
  */
 public class RobotImpl implements Robot {
+   // The world is in charge of enforcing its own thread-safety; 
    private World env;
    private RobotDisplayTarget displayTarget = null;
 
@@ -78,12 +79,11 @@ public class RobotImpl implements Robot {
       }
       // Use position accessor to access under lock
       moveCommon(position().left(), TURN_TIME);
-      synchronized (this) {
-         if (turnLeftCallSites.add(Thread.currentThread().getStackTrace()[2])) {
-            ++stats.numTurnLeftCallSites;
-         }
-         displayTarget.updateRobotStats(stats);
+      stats.add(RobotStats.Id.TURNS_LEFT, 1);
+      if (turnLeftCallSites.add(Thread.currentThread().getStackTrace()[2])) {
+         stats.add(RobotStats.Id.TURN_LEFT_CALLSITES, 1);
       }
+      displayTarget.robotStatsChanged();
    }
 
    private HashSet<StackTraceElement> turnRightCallSites = new HashSet<>();
@@ -95,12 +95,11 @@ public class RobotImpl implements Robot {
          return;
       }
       moveCommon(position().right(), TURN_TIME);
-      synchronized (this) {
-         if (turnRightCallSites.add(Thread.currentThread().getStackTrace()[2])) {
-            ++stats.numTurnRightCallSites;
-         }
-         displayTarget.updateRobotStats(stats);
+      stats.add(RobotStats.Id.TURNS_RIGHT, 1);
+      if (turnRightCallSites.add(Thread.currentThread().getStackTrace()[2])) {
+         stats.add(RobotStats.Id.TURN_RIGHT_CALLSITES, 1);
       }
+      displayTarget.robotStatsChanged();
    }
 
    private HashSet<StackTraceElement> moveForwardCallSites = new HashSet<>();
@@ -110,18 +109,16 @@ public class RobotImpl implements Robot {
          if (blocked()) {
             isCrashed = true;
          }
-      }
-      if (crashed()) {
-         return;
+         if (isCrashed) {
+            return;
+         }
       }
       moveCommon(position.forward(), MOVE_TIME);
-      synchronized (this) {
-         ++stats.numMovesForward;
-         if (moveForwardCallSites.add(Thread.currentThread().getStackTrace()[2])) {
-            ++stats.numMoveForwardCallSites;
-         }
-         displayTarget.updateRobotStats(stats);
+      stats.add(RobotStats.Id.FORWARD_MOVES, 1);
+      if (moveForwardCallSites.add(Thread.currentThread().getStackTrace()[2])) {
+         stats.add(RobotStats.Id.MOVE_FORWARD_CALLSITES, 1);
       }
+      displayTarget.robotStatsChanged();
    }
 
    /**
@@ -146,8 +143,8 @@ public class RobotImpl implements Robot {
       return itemInHand;
    }
 
-   synchronized public Item itemOnGround() {
-      return env.itemAt(position.asCoord2D());
+   public Item itemOnGround() {
+      return env.itemAt(position().asCoord2D());
    }
 
    synchronized public void grab() {
@@ -177,6 +174,11 @@ public class RobotImpl implements Robot {
          itemInHand = Item.NONE;
          displayTarget.setRobotCarriedItem(Item.NONE);
       }
+   }
+
+   // RobotStats does its own thread-safety, so no sync needed.
+   public RobotStats stats() {
+      return stats;
    }
 
 }
