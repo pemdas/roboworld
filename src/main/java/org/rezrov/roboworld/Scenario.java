@@ -200,11 +200,17 @@ public class Scenario {
       return goals;
    }
 
-   static Robot setUp(int scenarioId) {
+   public static Robot setUp(int scenarioId) {
       Scenario s;
       switch (scenarioId) {
          case TEST1:
             s = test1Scene();
+            break;
+         case RANDOM_MAZE:
+            s = randomMazeScene();
+            break;
+         case BIG_SPIRAL:
+            s = bigSpiralScene();
             break;
          default:
             throw new NoSuchElementException("Unknown scenario id: " + scenarioId);
@@ -214,8 +220,10 @@ public class Scenario {
    }
 
    static final public int TEST1 = 0;
+   static final public int RANDOM_MAZE = 1;
+   static final public int BIG_SPIRAL = 2;
 
-   private static Scenario test1Scene() throws WallsParseException {
+   private static Scenario test1Scene() {
 
       String map = "" +
             "+-+-+-+\n" +
@@ -227,14 +235,76 @@ public class Scenario {
             "+ +-+ +\n" +
             "|     |\n" +
             "+-+-+-+\n";
+      try {
+         return new Scenario(new Walls(map), new DiscreteWorldPosition(2, 1, Direction.RIGHT),
+               new Options()
+                     .addItemGoalPosition(Item.STAR, new Coord2D(0, 1))
+                     .addItemGoalPosition(Item.MOON, new Coord2D(2, 2))
+                     .addItem(Item.STAR, new Coord2D(1, 0))
+                     .addItem(Item.MOON, new Coord2D(0, 2))
+                     .addRobotGoalPositions(List.of(new Coord2D(0, 0), new Coord2D(0, 1), new Coord2D(2, 1))));
+      } catch (WallsParseException e) {
+         return null;
+      }
+   }
 
-      return new Scenario(new Walls(map), new DiscreteWorldPosition(2, 1, Direction.RIGHT),
+   private static Scenario randomMazeScene() {
+      int width = 10;
+      int height = 10;
+      return new Scenario(Walls.createRandomMaze(width, height), new DiscreteWorldPosition(0, 0, Direction.DOWN),
             new Options()
-                  .addItemGoalPosition(Item.STAR, new Coord2D(0, 1))
-                  .addItemGoalPosition(Item.MOON, new Coord2D(2, 2))
-                  .addItem(Item.STAR, new Coord2D(1, 0))
-                  .addItem(Item.MOON, new Coord2D(0, 2))
-                  .addRobotGoalPositions(List.of(new Coord2D(0, 0), new Coord2D(0, 1), new Coord2D(2, 1))));
+                  .addRobotGoalPositions(List.of(new Coord2D(width - 1, height - 1))));
+
+   }
+
+   private static Scenario bigSpiralScene() {
+      String map = "" +
+            "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n" +
+            "|                                     |\n" +
+            "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ +\n" +
+            "|                                   | |\n" +
+            "+ +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ + +\n" +
+            "| |                               | | |\n" +
+            "+ + +-+-+-+-+-+-+-+-+-+-+-+-+-+-+ + + +\n" +
+            "| | |                           | | | |\n" +
+            "+ + + +-+-+-+-+-+-+-+-+-+-+-+-+ + + + +\n" +
+            "| | | |                       | | | | |\n" +
+            "+ + + + +-+-+-+-+-+-+-+-+-+-+ + + + + +\n" +
+            "| | | | |                   | | | | | |\n" +
+            "+ + + + + +-+-+-+-+-+-+-+-+ + + + + + +\n" +
+            "| | | | | |               | | | | | | |\n" +
+            "+ + + + + + +-+-+-+-+-+-+ + + + + + + +\n" +
+            "| | | | | | |           | | | | | | | |\n" +
+            "+ + + + + + + +-+-+-+-+ + + + + + + + +\n" +
+            "| | | | | | | |       | | | | | | | | |\n" +
+            "+ + + + + + + + +-+-+ + + + + + + + + +\n" +
+            "| | | | | | | | |   | | | | | | | | | |\n" +
+            "+ + + + + + + + + +-+ + + + + + + + + +\n" +
+            "| | | | | | | | |     | | | | | | | | |\n" +
+            "+ + + + + + + + +-+-+-+ + + + + + + + +\n" +
+            "| | | | | | | |         | | | | | | | |\n" +
+            "+ + + + + + + +-+-+-+-+-+ + + + + + + +\n" +
+            "| | | | | | |             | | | | | | |\n" +
+            "+ + + + + + +-+-+-+-+-+-+-+ + + + + + +\n" +
+            "| | | | | |                 | | | | | |\n" +
+            "+ + + + + +-+-+-+-+-+-+-+-+-+ + + + + +\n" +
+            "| | | | |                     | | | | |\n" +
+            "+ + + + +-+-+-+-+-+-+-+-+-+-+-+ + + + +\n" +
+            "| | | |                         | | | |\n" +
+            "+ + + +-+-+-+-+-+-+-+-+-+-+-+-+-+ + + +\n" +
+            "| | |                             | | |\n" +
+            "+ + +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ + +\n" +
+            "| |                                 | |\n" +
+            "+ +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ +\n" +
+            "|                                     |\n" +
+            "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n";
+      try {
+         return new Scenario(new Walls(map), new DiscreteWorldPosition(0, 0, Direction.RIGHT),
+               new Options()
+                     .addRobotGoalPositions(List.of(new Coord2D(9, 9))));
+      } catch (WallsParseException e) {
+         return null;
+      }
    }
 
    public World world() {
