@@ -89,7 +89,7 @@ public class Scenario {
    // A description of the scenario, presented to the student.
    // private String description;
 
-   public Scenario(String walls, DiscreteWorldPosition robotStartPosition, Options options) {
+   public Scenario(Walls walls, DiscreteWorldPosition robotStartPosition, Options options) {
       this.world = new World(walls, robotStartPosition, options);
       goals = new ArrayList<>();
 
@@ -228,7 +228,7 @@ public class Scenario {
             "|     |\n" +
             "+-+-+-+\n";
 
-      return new Scenario(map, new DiscreteWorldPosition(2, 1, Direction.RIGHT),
+      return new Scenario(new Walls(map), new DiscreteWorldPosition(2, 1, Direction.RIGHT),
             new Options()
                   .addItemGoalPosition(Item.STAR, new Coord2D(0, 1))
                   .addItemGoalPosition(Item.MOON, new Coord2D(2, 2))
