@@ -44,6 +44,23 @@ public class Coord2D
       return new ContinuousWorldPosition(x, y, 0);
    }
 
+   // Get neighbor coordinates.
+   Coord2D left() {
+      return new Coord2D(x - 1, y);
+   }
+
+   Coord2D right() {
+      return new Coord2D(x + 1, y);
+   }
+
+   Coord2D up() {
+      return new Coord2D(x, y - 1);
+   }
+
+   Coord2D down() {
+      return new Coord2D(x, y + 1);
+   }
+
    @Override
    public String toString() {
       return "Coord (" + x + ", " + y + ")";

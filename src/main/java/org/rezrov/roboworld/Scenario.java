@@ -215,7 +215,7 @@ public class Scenario {
 
    static final public int TEST1 = 0;
 
-   private static Scenario test1Scene() throws WorldMap.MapParseException {
+   private static Scenario test1Scene() throws WallsParseException {
 
       String map = "" +
             "+-+-+-+\n" +

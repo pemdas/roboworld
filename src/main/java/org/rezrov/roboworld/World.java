@@ -18,12 +18,11 @@ public class World {
    private RobotImpl robot;
    private Map<Coord2D, Item> items;
 
-   public World(String walls, DiscreteWorldPosition robotStartingPosition) throws WorldMap.MapParseException {
+   public World(Walls walls, DiscreteWorldPosition robotStartingPosition) {
       this(walls, robotStartingPosition, new Scenario.Options());
    }
 
-   public World(String walls, DiscreteWorldPosition robotStartingPosition, Scenario.Options options)
-         throws WorldMap.MapParseException {
+   public World(Walls walls, DiscreteWorldPosition robotStartingPosition, Scenario.Options options) {
       map = new WorldMap(walls, options);
       items = new HashMap<>(options.items);
       robot = new RobotImpl(this, robotStartingPosition);

@@ -24,12 +24,12 @@ public class RobotImplTest {
 
    // All tests in here use this maze.
    private RobotImpl createRobot(DiscreteWorldPosition startingPosition) {
-      RobotImpl r = new World("" +
+      RobotImpl r = new World(new Walls("" +
             "+-+-+\n" +
             "| | |\n" +
             "+ + +\n" +
             "|   |\n" +
-            "+-+-+\n", startingPosition).robot();
+            "+-+-+\n"), startingPosition).robot();
       r.setDisplayTarget(new FakeRobotDisplayTarget());
       return r;
    }

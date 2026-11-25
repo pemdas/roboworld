@@ -5,12 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-public class WorldMapTest {
+public class WallsTest {
 
    @Test
    public void testImplicitWalls() {
       // Create an empty world, check that the exterior walls exist.
-      WorldMap w = new WorldMap("" +
+      Walls w = new Walls("" +
             "+-+-+\n" +
             "|   |\n" +
             "+ + +\n" +
@@ -49,7 +49,7 @@ public class WorldMapTest {
       // |   |   |
       // +---+---+
       // @formatter:on
-      WorldMap w = new WorldMap("" +
+      Walls w = new Walls("" +
             "+-+-+\n" +
             "|   |\n" +
             "+ + +\n" +
@@ -68,7 +68,7 @@ public class WorldMapTest {
    @Test
    public void testHorzontalWalls() {
       // Create a world with some horizontal interior walls, check that they exist.
-      WorldMap w = new WorldMap("" +
+      Walls w = new Walls("" +
             "+-+-+-+\n" +
             "|     |\n" +
             "+-+ +-+\n" +
